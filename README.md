@@ -20,6 +20,17 @@ rater, blinded to placement condition, then measured the position of six
 electrodes against their IFCN-derived expected positions and rated each
 placement Optimal, Usable or Incorrect.
 
+![The guidance the inexperienced users followed](figures/figure1_app_guidance.png)
+
+What the inexperienced arm was working from. Through the device camera the app
+tracks the user's facial landmarks together with the cap's five front-facing
+electrodes, and reports for each one whether it sits where the 10–20 system
+puts it: **(a)** during adjustment, with Fp1 and Fp2 flagged too high, and
+**(b)** the same cap once every position is in range. This is Figure 1 of the
+paper, a composite of screen captures — unlike every other figure here it is
+not regenerated from the published data, because the application itself is out
+of scope. See [Scope](#scope).
+
 ## What is here
 
 | Directory | Reproduces |
@@ -30,6 +41,8 @@ placement Optimal, Usable or Incorrect.
 ```
 clinical/
   data/                 4 CSVs — the entire published dataset (52 KB)
+    export_public_dataset.py   the allowlist exporter that produced them,
+                               published for audit; it will not run here
   analyze_study.py      summary statistics, both pre-specified analyses, figures 01-16
   revision_analyses.py  per-electrode MAE, demographics, failure cases
   paper_figures.py      the 300 dpi manuscript composites
@@ -39,6 +52,7 @@ forward_model/
   report.py             supplementary figure + headline numbers
   cache/                committed: the small summaries report.py needs
   figures/              committed: the supplementary figure
+figures/                Figure 1, the one image not generated from the data
 ```
 
 ## Quick start
@@ -183,7 +197,13 @@ consistent error.
 
 The CSVs in `clinical/data/` are generated from the study's source workbooks by
 an allowlist exporter that emits only the columns the published analysis
-consumes. The source workbooks are not published: alongside the pseudonymised
+consumes. That exporter is published alongside its output, as
+[`clinical/data/export_public_dataset.py`](clinical/data/export_public_dataset.py),
+so the de-identification can be read and checked rather than taken on trust. It
+refuses to run from this repository — it executes inside the study's private
+analysis package, against workbooks that are not distributed.
+
+The source workbooks are not published: alongside the pseudonymised
 measurements they carry a participant name lookup, and scrubbing a spreadsheet
 is a denylist — workbooks can hide data in additional sheets, cell comments,
 defined names and cached pivot ranges. Exporting only named columns removes
