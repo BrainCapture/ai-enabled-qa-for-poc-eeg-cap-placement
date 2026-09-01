@@ -30,9 +30,11 @@ manuscript's headline numbers first and fails loudly if they move. Its prose
 output is written to `outputs/part2-analyses.md`.
 
 `paper_figures.py` writes the publication composites at 300 dpi —
-`figure2_combined.png` (Figure 2), `figure3_threearm.png` (Supplementary
-Figure 3), plus the Bland–Altman panel standalone and the 10–20 measurement
-schematic. Its data loader is deliberately **independent** of
+`figure2_combined.png` (Figure 2) and `supplementary4_threearm.png`
+(Supplementary Material 4), plus the Bland–Altman panel on its own, which is
+not a manuscript figure but is easier to read separated from the confusion
+matrix. Both composites are byte-identical to the files submitted with the
+manuscript. Its data loader is deliberately **independent** of
 `analyze_study.py`: the manuscript figures and the reported statistics reach
 the same numbers by two separate code paths from the same CSVs, so a mistake in
 either one shows up as a disagreement rather than as a consistent error.

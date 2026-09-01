@@ -4,14 +4,16 @@
 `analyze_study.py` writes the screen-resolution exploratory figures. This
 script writes the composites that appear in the manuscript itself, at 300 dpi:
 
-  figure2_combined.png   Figure 2   — (a) Expert vs App-guided outcome
-                                      confusion matrix, (b) Bland-Altman on
-                                      per-participant mean absolute error
-  figure3_threearm.png   Figure S3  — (a) outcome distribution and
-                                      (b) per-electrode error, resolving the
-                                      App arm into Self- and Helper-guided
-  17_bland_altman.png               — the Bland-Altman panel standalone
-  18_head_diagram.png               — 10-20 measurement schematic (no data)
+  figure2_combined.png          Figure 2 — (a) Expert vs App-guided outcome
+                                confusion matrix, (b) Bland-Altman on
+                                per-participant mean absolute error
+  supplementary4_threearm.png   Supplementary Material 4 — (a) outcome
+                                distribution and (b) per-electrode error,
+                                resolving the App arm into Self- and
+                                Helper-guided
+  17_bland_altman.png           the Bland-Altman panel standalone; not a
+                                manuscript figure, kept because the panel is
+                                easier to read on its own
 
 Reads only the CSVs in `data/`; writes to `outputs/`. The data loader here is
 deliberately independent of `analyze_study.py` so the manuscript figures and
@@ -24,11 +26,9 @@ from __future__ import annotations
 import warnings
 from pathlib import Path
 
-import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from matplotlib.patches import Ellipse
 from scipy import stats
 
 warnings.filterwarnings("ignore")
@@ -174,248 +174,6 @@ def plot_bland_altman(df: pd.DataFrame) -> None:
         plt.close()
     print("  Saved 17_bland_altman.png (300 dpi)")
 
-
-
-# ---------------------------------------------------------------------------
-# Head diagram — 10-20 measurement positions (schematic, no data)
-# ---------------------------------------------------------------------------
-
-def plot_head_diagram() -> None:
-    """
-    Publication-quality schematic of the 10-20 measurement positions.
-
-    Panel (a) — Top-down (axial) view:
-        Shows all 6 electrode positions (Fp1/Fp2, T7/T8, O1/O2) on a head
-        outline with measurement arcs.
-
-    Panel (b) — Sagittal (side) view:
-        Shows the anterior-posterior arc (Nasion-Cz-Inion) and the
-        Fp / O electrode positions along it.
-    """
-    ELEC_COLOR = "#D32F2F"
-    ARROW_COLOR = "#1565C0"
-    HEAD_COLOR = "#444444"
-    LABEL_PAD = 0.04
-
-    with plt.rc_context({**STYLE_RC, "font.size": 11, "axes.labelsize": 11}):
-        fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(12, 6.5),
-                                          facecolor="white")
-        for ax in (ax_a, ax_b):
-            ax.set_aspect("equal")
-            ax.axis("off")
-
-        # ── Panel (a): Top-down view ──────────────────────────────────────────
-        cx, cy = 0.0, 0.0
-        rx, ry = 0.42, 0.52   # head semi-axes
-
-        # Head outline
-        head = Ellipse((cx, cy), 2 * rx, 2 * ry,
-                       fill=True, facecolor="#FAF9F6", edgecolor=HEAD_COLOR,
-                       linewidth=2.0, zorder=2)
-        ax_a.add_patch(head)
-
-        # Nose at top
-        nose_y = cy + ry
-        for dx in [-0.06, 0.06]:
-            ax_a.plot([cx + dx, cx], [nose_y, nose_y + 0.09],
-                      color=HEAD_COLOR, lw=1.6, zorder=3)
-
-        # Reference lines (thin dashed)
-        ax_a.plot([-rx * 0.95, rx * 0.95], [cy, cy], color="#BBBBBB", lw=0.8,
-                  ls="--", zorder=1)
-        ax_a.plot([cx, cx], [-ry * 0.92, ry * 0.92], color="#BBBBBB", lw=0.8,
-                  ls="--", zorder=1)
-
-        # Electrode positions (top-down, approximate 10-20 fractions)
-        # Fp1 and Fp2 are at 10% from nasion, 10% from midline
-        FP_Y = cy + ry * 0.65
-        FP_X = 0.16
-        O_Y  = cy - ry * 0.65
-        O_X  = 0.16
-        T_X  = rx
-        T_Y  = cy
-
-        electrodes = {
-            "Fp1": (-FP_X,  FP_Y),
-            "Fp2": ( FP_X,  FP_Y),
-            "T7":  (-T_X,   T_Y),
-            "T8":  ( T_X,   T_Y),
-            "O1":  (-O_X,   O_Y),
-            "O2":  ( O_X,   O_Y),
-            "Cz":  (0.0,    0.0),
-        }
-
-        for name, (ex, ey) in electrodes.items():
-            r = 0.04 if name != "Cz" else 0.03
-            fc = ELEC_COLOR if name != "Cz" else "#888888"
-            dot = plt.Circle((ex, ey), r, color=fc, zorder=5)
-            ax_a.add_patch(dot)
-            offsets = {
-                "Fp1": (-LABEL_PAD - 0.04, 0.02), "Fp2": ( LABEL_PAD, 0.02),
-                "T7":  (-LABEL_PAD - 0.08, 0.0),  "T8":  ( LABEL_PAD, 0.0),
-                "O1":  (-LABEL_PAD - 0.04, -0.04),"O2":  ( LABEL_PAD, -0.04),
-                "Cz":  (0.04, 0.02),
-            }
-            ox, oy = offsets[name]
-            ax_a.text(ex + ox, ey + oy, name,
-                      fontsize=11, fontweight="bold", color=fc,
-                      va="center", ha="left" if ox >= 0 else "right", zorder=6)
-
-        # Transverse arc annotation (T7–Cz–T8)
-        ax_a.annotate("", xy=( T_X, T_Y), xytext=(-T_X, T_Y),
-                      arrowprops=dict(arrowstyle="<->", color=ARROW_COLOR,
-                                      lw=1.5,
-                                      connectionstyle="arc3,rad=-0.35"))
-        ax_a.text(cx, T_Y + 0.10, "Transverse arc\n(PA–Cz–PA)",
-                  ha="center", va="bottom", fontsize=9.5, color=ARROW_COLOR)
-
-        # AP arc annotation (Fp–Cz–O, left side only)
-        ax_a.annotate("", xy=(-FP_X, FP_Y), xytext=(-O_X, O_Y),
-                      arrowprops=dict(arrowstyle="<->", color="#009944",
-                                      lw=1.5,
-                                      connectionstyle="arc3,rad=0.55"))
-        ax_a.text(-rx - 0.08, cy, "A-P arc\n(Nasion–Cz–Inion)",
-                  ha="right", va="center", fontsize=9.5, color="#009944",
-                  rotation=90)
-
-        # Lateral offset arrows for Fp1 (lat)
-        ax_a.annotate("", xy=(-FP_X, FP_Y), xytext=(0, FP_Y),
-                      arrowprops=dict(arrowstyle="<->", color="#7B1FA2", lw=1.3))
-        ax_a.text(-FP_X / 2, FP_Y + 0.05, "lat", ha="center", va="bottom",
-                  fontsize=9, color="#7B1FA2")
-
-        # AP offset for Fp1
-        # Find the arc position at Fp1's lateral distance from midline
-        ax_a.annotate("", xy=(-FP_X, FP_Y), xytext=(-FP_X, FP_Y + ry * 0.28),
-                      arrowprops=dict(arrowstyle="<->", color="#7B1FA2", lw=1.3))
-        ax_a.text(-FP_X - 0.05, FP_Y + ry * 0.14, "A-P", ha="right", va="center",
-                  fontsize=9, color="#7B1FA2")
-
-        ax_a.set_xlim(-rx - 0.28, rx + 0.28)
-        ax_a.set_ylim(-ry - 0.22, ry + 0.28)
-        ax_a.text(cx, ry + 0.22, "(a) Top-down view",
-                  ha="center", va="bottom", fontsize=12, fontweight="bold")
-        ax_a.text(cx, ry + 0.08, "Nasion (front)",
-                  ha="center", va="bottom", fontsize=9, style="italic", color="#888888")
-        ax_a.text(cx, -ry - 0.17, "Inion (back)",
-                  ha="center", va="top", fontsize=9, style="italic", color="#888888")
-
-        # ── Panel (b): Sagittal (left side) view ─────────────────────────────
-        # Ellipse: wider in x (A-P) than y (superior-inferior)
-        cx2, cy2 = 0.0, 0.0
-        rx2, ry2 = 0.55, 0.45
-
-        head2 = Ellipse((cx2, cy2), 2 * rx2, 2 * ry2,
-                        fill=True, facecolor="#FAF9F6", edgecolor=HEAD_COLOR,
-                        linewidth=2.0, zorder=2)
-        ax_b.add_patch(head2)
-
-        # Nasion (front) and Inion (back) anchor points
-        nasion = (-rx2, 0.0)
-        inion  = ( rx2, 0.0)
-
-        # A-P arc (dashed line along the arc, shown as curved path through Cz)
-        t_arc = np.linspace(np.pi, 0, 200)
-        arc2_x = rx2 * np.cos(t_arc)
-        arc2_y = ry2 * np.sin(t_arc)
-        ax_b.plot(arc2_x, arc2_y, color="#009944", lw=1.5, ls="--", zorder=3,
-                  label="A-P arc (Nasion–Cz–Inion)")
-
-        # Electrode positions along the arc (approximate arc-length fractions)
-        # Fp1: 10% from Nasion along the arc
-        # O1:  10% from Inion along the arc
-        def arc_pos(frac: float) -> tuple[float, float]:
-            theta = np.pi * (1 - frac)
-            return rx2 * np.cos(theta), ry2 * np.sin(theta)
-
-        fp1_pos = arc_pos(0.10)   # 10% from Nasion
-        o1_pos  = arc_pos(0.90)   # 10% from Inion
-        cz_arc  = arc_pos(0.50)
-
-        for pos, name in [(fp1_pos, "Fp1"), (o1_pos, "O1"), (cz_arc, "Cz")]:
-            fc = ELEC_COLOR if name != "Cz" else "#888888"
-            r = 0.04 if name != "Cz" else 0.03
-            dot = plt.Circle(pos, r, color=fc, zorder=5)
-            ax_b.add_patch(dot)
-            ox = -0.07 if name == "Fp1" else (0.07 if name == "O1" else 0.06)
-            oy = 0.02
-            ax_b.text(pos[0] + ox, pos[1] + oy, name,
-                      fontsize=11, fontweight="bold", color=fc,
-                      ha="left" if ox > 0 else "right", va="center", zorder=6)
-
-        # T7 on the temporal region: preauricular point is roughly at the
-        # equatorial level, slightly anterior of center in the sagittal view.
-        t7_pos = (-rx2 * 0.18, -ry2 * 0.05)
-        # Snap to the head surface
-        theta_t7 = np.arctan2(t7_pos[1] / ry2, t7_pos[0] / rx2)
-        t7_pos = (rx2 * np.cos(theta_t7), ry2 * np.sin(theta_t7))
-        dot_t7 = plt.Circle(t7_pos, 0.04, color=ELEC_COLOR, zorder=5)
-        ax_b.add_patch(dot_t7)
-        ax_b.text(t7_pos[0] - 0.06, t7_pos[1] - 0.10, "T7\n(preauricular)",
-                  fontsize=10, fontweight="bold", color=ELEC_COLOR,
-                  ha="center", va="top", zorder=6)
-
-        # Nasion and Inion markers
-        for pos, label, ha in [(nasion, "Nasion", "right"), (inion, "Inion", "left")]:
-            dot = plt.Circle(pos, 0.03, color="#888888", zorder=5)
-            ax_b.add_patch(dot)
-            ox2 = -0.05 if ha == "right" else 0.05
-            ax_b.text(pos[0] + ox2, pos[1], label,
-                      fontsize=9.5, style="italic", color="#666666",
-                      ha=ha, va="center", zorder=6)
-
-        # A-P offset annotation for Fp1 (arc from Nasion to Fp1)
-        nasion_arc = (-rx2, 0.0)
-        ax_b.annotate("", xy=fp1_pos, xytext=nasion_arc,
-                      arrowprops=dict(arrowstyle="<->", color=ARROW_COLOR,
-                                      lw=1.5,
-                                      connectionstyle="arc3,rad=-0.35"),
-                      zorder=4)
-        ax_b.text(-rx2 * 0.80, 0.30, "10 % of\nA-P arc",
-                  ha="center", va="bottom", fontsize=9.5, color=ARROW_COLOR)
-
-        # A-P offset annotation for O1 (arc from Inion to O1)
-        inion_arc = ( rx2, 0.0)
-        ax_b.annotate("", xy=o1_pos, xytext=inion_arc,
-                      arrowprops=dict(arrowstyle="<->", color=ARROW_COLOR,
-                                      lw=1.5,
-                                      connectionstyle="arc3,rad=0.35"),
-                      zorder=4)
-        ax_b.text(rx2 * 0.80, 0.30, "10 % of\nA-P arc",
-                  ha="center", va="bottom", fontsize=9.5, color=ARROW_COLOR)
-
-        # T7 transverse arc annotation (arc from T7 to Cz)
-        ax_b.annotate("", xy=t7_pos, xytext=cz_arc,
-                      arrowprops=dict(arrowstyle="<->", color="#009944",
-                                      lw=1.4,
-                                      connectionstyle="arc3,rad=0.5"),
-                      zorder=4)
-        ax_b.text(-rx2 * 0.20, ry2 * 0.72, "10 % of\ntransverse arc",
-                  ha="center", va="center", fontsize=9, color="#009944")
-
-        ax_b.set_xlim(-rx2 - 0.22, rx2 + 0.22)
-        ax_b.set_ylim(-ry2 - 0.20, ry2 + 0.22)
-        ax_b.text(cx2, ry2 + 0.17, "(b) Sagittal view (left hemisphere)",
-                  ha="center", va="bottom", fontsize=12, fontweight="bold")
-
-        # Shared legend
-        handles = [
-            mpatches.Patch(color=ELEC_COLOR, label="Measured electrode"),
-            mpatches.Patch(color="#888888",  label="Reference point"),
-            plt.Line2D([0], [0], color="#009944", lw=1.5, ls="--",
-                       label="A-P arc / transverse arc"),
-            plt.Line2D([0], [0], color=ARROW_COLOR,  lw=1.5,
-                       label="10 % arc measurement"),
-        ]
-        fig.legend(handles=handles, loc="lower center", ncol=4,
-                   fontsize=10, frameon=True, framealpha=1.0,
-                   edgecolor="#CCCCCC", bbox_to_anchor=(0.5, 0.0))
-
-        plt.tight_layout(rect=[0, 0.07, 1, 1])
-        plt.savefig(PLOT_DIR / "18_head_diagram.png", dpi=300,
-                    facecolor="white", bbox_inches="tight")
-        plt.close()
-    print("  Saved 18_head_diagram.png (300 dpi)")
 
 
 # ---------------------------------------------------------------------------
@@ -671,10 +429,10 @@ def plot_figure2(df: pd.DataFrame) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Supplementary Figure 3 — three-arm outcomes (a) + per-electrode error (b)
+# Supplementary Material 4 — three-arm outcomes (a) + per-electrode error (b)
 # ---------------------------------------------------------------------------
 
-def plot_figure3(df: pd.DataFrame) -> None:
+def plot_supplementary4(df: pd.DataFrame) -> None:
     order_display = ["Expert", "Self-guided", "Helper-guided"]
 
     with plt.rc_context(STYLE_RC):
@@ -767,10 +525,10 @@ def plot_figure3(df: pd.DataFrame) -> None:
                     fontsize=15, fontweight="bold", va="bottom")
 
         plt.tight_layout()
-        plt.savefig(PLOT_DIR / "figure3_threearm.png", dpi=300,
+        plt.savefig(PLOT_DIR / "supplementary4_threearm.png", dpi=300,
                     facecolor="white", bbox_inches="tight")
         plt.close()
-    print("  Saved figure3_threearm.png (300 dpi)")
+    print("  Saved supplementary4_threearm.png (300 dpi)")
 
 
 
@@ -791,11 +549,8 @@ def main() -> None:
     print("\nGenerating Figure 2 (confusion matrix + Bland-Altman)...")
     plot_figure2(df)
 
-    print("\nGenerating supplementary Figure 3 (three-arm)...")
-    plot_figure3(df)
-
-    print("\nGenerating head diagram (10-20 measurement schematic)...")
-    plot_head_diagram()
+    print("\nGenerating Supplementary Material 4 (three-arm)...")
+    plot_supplementary4(df)
 
     print(f"\nAll paper figures saved to: {PLOT_DIR}\n")
 

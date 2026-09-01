@@ -6,8 +6,8 @@ Reproduction code and data for:
 > Skafte Detlefsen N, Beniczky S. *AI-enabled quality assurance for
 > point-of-care EEG cap positioning by inexperienced users.*
 
-Everything needed to reproduce the published results, and nothing else. This is
-not the guidance application — see [Scope](#scope).
+Everything needed to reproduce the published results, from the de-identified
+trial data through to the figures as they appear in the manuscript.
 
 ## The study in one paragraph
 
@@ -27,9 +27,8 @@ tracks the user's facial landmarks together with the cap's five front-facing
 electrodes, and reports for each one whether it sits where the 10–20 system
 puts it: **(a)** during adjustment, with Fp1 and Fp2 flagged too high, and
 **(b)** the same cap once every position is in range. This is Figure 1 of the
-paper, a composite of screen captures — unlike every other figure here it is
-not regenerated from the published data, because the application itself is out
-of scope. See [Scope](#scope).
+paper, a composite of screen captures — the one image here that the published
+data does not regenerate.
 
 ## What is here
 
@@ -52,7 +51,8 @@ forward_model/
   report.py             supplementary figure + headline numbers
   cache/                committed: the small summaries report.py needs
   figures/              committed: the supplementary figure
-figures/                Figure 1, the one image not generated from the data
+figures/                Figure 1 and Supplementary Material 2 — the two drawn
+                        images, not generated from the data
 ```
 
 ## Quick start
@@ -82,13 +82,23 @@ reprints every headline number in about two seconds. See
 
 ## What was measured
 
-![10-20 measurement schematic](clinical/outputs/18_head_diagram.png)
+![Measurement schematic](figures/supplementary2_measurement_schematic.png)
 
-Six electrodes — Fp1, Fp2, T7, T8, O1, O2 — each measured on both the
-anteroposterior and lateral axes where applicable, giving ten deviations per
-placement. Deviation is signed, in centimetres, measured minus the position the
-10–20 system prescribes for that participant's own head arcs. Everything
-downstream is built from those ten numbers per trial.
+Six electrodes in red — Fp1, Fp2, T7, T8, O1, O2 — scored on three kinds of
+offset (blue, ①–③): the temporal pair on their distance from the preauricular
+point, and each frontopolar and occipital electrode on both a vertical and a
+horizontal offset. Ten signed deviations per placement, in centimetres,
+measured minus the position the 10–20 system prescribes.
+
+What it prescribes depends on the head, so four reference measurements (grey,
+④–⑦) set each participant's own targets. Two of them, the transverse arc and
+the A–P arc via Cz, are published in
+[`reference_arcs.csv`](clinical/data/reference_arcs.csv) and carry the
+normalisation and the head-size covariate.
+
+Everything downstream is built from those ten numbers per trial. This is
+Supplementary Material 2 of the paper; like Figure 1 it is a drawn schematic
+rather than a plot of the data.
 
 ## Main result — Figure 2
 
@@ -118,9 +128,9 @@ user error. The offset is nonetheless larger under app-guided placement
 (T7 +0.42 cm, p = 0.003; T8 +0.30 cm, p = 0.019), so it is not purely a property
 of the cap. `revision_analyses.py` reproduces the per-electrode breakdown.
 
-## Three-arm breakdown — Supplementary Figure 3
+## Three-arm breakdown — Supplementary Material 4
 
-![Supplementary Figure 3: three-arm comparison](clinical/outputs/figure3_threearm.png)
+![Supplementary Material 4: three-arm comparison](clinical/outputs/supplementary4_threearm.png)
 
 Resolving the app arm into its two sub-conditions. **(a)** Helper-guided
 placement produced no Incorrect outcomes; both failures came from self-placement,
@@ -217,29 +227,6 @@ Wilcoxon sensitivity analysis.
 
 See [`clinical/data/DATA_DICTIONARY.md`](clinical/data/DATA_DICTIONARY.md) for
 the column-by-column description.
-
-## Scope
-
-The clinical results rest entirely on blinded expert measurements of electrode
-position. Those measurements, and the analysis that turns them into every
-published figure, are what this repository contains.
-
-Not included, and not needed to reproduce anything in the paper:
-
-- **The guidance application.** The component that computes cap position from
-  detected electrodes and generates corrective feedback is the subject of a
-  pending patent application and is intended for commercial deployment.
-- **The electrode detector and its training code.** The detector is a
-  component of the application, described in a companion technical report, and
-  no published result in this paper depends on rerunning it. It is built on
-  Ultralytics YOLO (AGPL-3.0); the licensing position is set out in the paper's
-  data and code availability statement.
-- **The detector training videos.** Identifiable facial recordings of study
-  participants. Because the system works by locating facial landmarks, the
-  footage cannot be anonymised without destroying the content that makes it
-  useful, and participant consent did not extend to public release of
-  identifiable imagery. Available to researchers on request under a data use
-  agreement — contact the corresponding author.
 
 ## Ethics
 
