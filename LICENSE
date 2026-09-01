@@ -1,0 +1,16 @@
+This repository is licensed in two parts.
+
+  Code   (*.py)                 MIT         LICENSES/MIT.txt
+  Data   (clinical/data/*.csv)  CC-BY-4.0   LICENSES/CC-BY-4.0.txt
+
+Everything here is the authors' own work and carries no copyleft dependency.
+MIT is used for the code rather than a Creative Commons licence, which Creative
+Commons itself discourages for software; CC-BY-4.0 is used for the dataset,
+where attribution is the point.
+
+The electrode detector and its training code are NOT part of this repository.
+They build on Ultralytics YOLO (AGPL-3.0) and are not required to reproduce any
+result in the clinical paper. See the paper's data and code availability
+statement.
+
+Copyright (c) 2026 the authors.

@@ -1,0 +1,30 @@
+baseline floor: mean 0.131 mm, max 0.592 mm
+  cap|anterior|0.25: mean  1.35 mm  median  1.53 mm
+  cap|anterior|0.5: mean  2.60 mm  median  2.96 mm
+  cap|anterior|0.855: mean  4.50 mm  median  5.06 mm
+  cap|anterior|0.938: mean  4.94 mm  median  5.57 mm
+  cap|anterior|1.5: mean  7.74 mm  median  8.94 mm
+  cap|anterior|2.0: mean 10.28 mm  median 11.96 mm
+  cap|left|0.25: mean  1.32 mm  median  1.34 mm
+  cap|left|0.5: mean  2.61 mm  median  2.65 mm
+  cap|left|0.855: mean  4.49 mm  median  4.53 mm
+  cap|left|0.938: mean  4.92 mm  median  5.00 mm
+  cap|left|1.5: mean  7.87 mm  median  8.03 mm
+  cap|left|2.0: mean 10.46 mm  median 10.71 mm
+                        count       mean  ...        75%        max
+direction magnitude_cm                    ...                      
+anterior  0.250          12.0   1.345925  ...   1.673691   2.118678
+          0.500          12.0   2.599716  ...   3.386242   3.638721
+          0.855          12.0   4.500555  ...   5.815184   6.523755
+          0.938          12.0   4.935788  ...   6.347457   7.231309
+          1.500          12.0   7.738268  ...   9.940692  10.552081
+          2.000          12.0  10.277209  ...  13.179109  14.034896
+left      0.250          12.0   1.318560  ...   1.608410   1.855617
+          0.500          12.0   2.610600  ...   3.205105   3.919469
+          0.855          12.0   4.490732  ...   5.474855   6.439908
+          0.938          12.0   4.915837  ...   6.008907   7.297993
+          1.500          12.0   7.865056  ...   9.520761  11.679778
+          2.000          12.0  10.462932  ...  12.640920  15.947778
+none      0.000          12.0   0.131089  ...   0.172237   0.592428
+
+[13 rows x 8 columns]

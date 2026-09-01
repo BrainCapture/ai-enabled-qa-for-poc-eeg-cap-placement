@@ -1,0 +1,101 @@
+subject_id,trial,method,method_simple
+1,1,Pro,Pro
+1,2,Self + App,App
+2,1,Self + App,App
+2,2,Pro,Pro
+3,1,Self + App,App
+3,2,Pro,Pro
+4,1,Pro,Pro
+4,2,Other + App,App
+5,1,Pro,Pro
+5,2,Self + App,App
+6,1,Self + App,App
+6,2,Pro,Pro
+7,1,Pro,Pro
+7,2,Self + App,App
+8,1,Pro,Pro
+8,2,Self + App,App
+9,1,Self + App,App
+9,2,Pro,Pro
+10,1,Other + App,App
+10,2,Pro,Pro
+11,1,Other + App,App
+11,2,Pro,Pro
+12,1,Pro,Pro
+12,2,Self + App,App
+13,1,Self + App,App
+13,2,Pro,Pro
+14,1,Other + App,App
+14,2,Pro,Pro
+15,1,Pro,Pro
+15,2,Self + App,App
+16,1,Self + App,App
+16,2,Pro,Pro
+17,1,Pro,Pro
+17,2,Self + App,App
+18,1,Other + App,App
+18,2,Pro,Pro
+19,1,Self + App,App
+19,2,Pro,Pro
+20,1,Pro,Pro
+20,2,Self + App,App
+21,1,Pro,Pro
+21,2,Other + App,App
+22,1,Other + App,App
+22,2,Pro,Pro
+23,1,Self + App,App
+23,2,Pro,Pro
+24,1,Pro,Pro
+24,2,Self + App,App
+25,1,Pro,Pro
+25,2,Other + App,App
+26,1,Self + App,App
+26,2,Pro,Pro
+27,1,Pro,Pro
+27,2,Other + App,App
+28,1,Pro,Pro
+28,2,Self + App,App
+29,1,Other + App,App
+29,2,Pro,Pro
+30,1,Pro,Pro
+30,2,Other + App,App
+31,1,Self + App,App
+31,2,Pro,Pro
+32,1,Pro,Pro
+32,2,Other + App,App
+33,1,Pro,Pro
+33,2,Self + App,App
+34,1,Other + App,App
+34,2,Pro,Pro
+35,1,Self + App,App
+35,2,Pro,Pro
+36,1,Pro,Pro
+36,2,Other + App,App
+37,1,Pro,Pro
+37,2,Self + App,App
+38,1,Other + App,App
+38,2,Pro,Pro
+39,1,Self + App,App
+39,2,Pro,Pro
+40,1,Pro,Pro
+40,2,Other + App,App
+41,1,Pro,Pro
+41,2,Self + App,App
+42,1,Other + App,App
+42,2,Pro,Pro
+43,1,Self + App,App
+43,2,Pro,Pro
+44,1,Pro,Pro
+44,2,Other + App,App
+45,1,Pro,Pro
+45,2,Self + App,App
+46,1,Other + App,App
+46,2,Pro,Pro
+47,1,Self + App,App
+47,2,Pro,Pro
+48,1,Pro,Pro
+48,2,Other + App,App
+49,1,Pro,Pro
+49,2,Self + App,App
+50,1,Other + App,App
+50,2,Pro,Pro

@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+title: >-
+  AI-enabled quality assurance for point-of-care EEG cap positioning
+  by inexperienced users — reproduction code and data
+message: If you use this software or dataset, please cite the paper below.
+type: software
+authors:
+  - family-names: Lehn-Schiøler
+    given-names: William
+    affiliation: BrainCapture / Technical University of Denmark
+  - family-names: Sverker Nilsson
+    given-names: Mads
+    affiliation: Technical University of Denmark
+  - family-names: Armand Larsen
+    given-names: Sidsel
+    affiliation: Danish Epilepsy Center, Filadelfia
+  - family-names: Justesen
+    given-names: Anders Bach
+    affiliation: Danish Epilepsy Center, Filadelfia
+  - family-names: Skafte Detlefsen
+    given-names: Nicki
+    affiliation: Technical University of Denmark
+  - family-names: Beniczky
+    given-names: Sándor
+    affiliation: Danish Epilepsy Center, Filadelfia / Aarhus University
+repository-code: >-
+  https://github.com/BrainCapture/ai-enabled-qa-for-poc-eeg-cap-placement
+license-url: https://github.com/BrainCapture/ai-enabled-qa-for-poc-eeg-cap-placement/blob/main/LICENSE
+version: 1.0.0

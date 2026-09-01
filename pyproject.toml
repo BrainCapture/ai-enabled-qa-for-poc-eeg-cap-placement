@@ -1,61 +1,35 @@
 [project]
-name = "product-template"
-version = "0.1.0"
-description = "Golden Image for Product Projects"
+name = "ai-enabled-qa-for-poc-eeg-cap-placement"
+version = "1.0.0"
+description = "Reproduction code and data for the clinical validation of an AI-enabled EEG cap placement quality-assurance system"
 readme = "README.md"
-requires-python = ">=3.12, <3.13"
-authors = [
-  { name = "Magnus Guldberg Pedersen", email = "mgp@braincapture.dk" },
-]
-license = { text = "BrainCapture AI Internal Use" }
+requires-python = ">=3.12,<3.13"
+license = { text = "MIT (code) and CC-BY-4.0 (data) — see LICENSE" }
 
+# Everything the clinical analysis and the forward model need. The bounds are
+# deliberately loose: every published number reproduces on current versions
+# too (checked against pandas 3.0 / matplotlib 3.11). Only the rendered pixels
+# move, which is what uv.lock is for — see [tool.uv] below.
 dependencies = [
-  # GAR private packages
-  "galen-functionality>=0.0.11",
-  # Third-party packages
-  "mne>=1.9.0",
-  "pandas>=2.2.3",
-  "edfio>=0.4.9",
-  "keyrings-google-artifactregistry-auth>=1.1.2",
+  "pandas>=2.2",
+  "numpy>=1.26",
+  "scipy>=1.13",
+  "matplotlib>=3.8",
+  "seaborn>=0.13",
+  "mne>=1.7",
 ]
 
 [dependency-groups]
-dev = [
-    "ruff",
-    "isort",
-    "mypy",
-    "bandit",
-    "lefthook",
-    "pytest",
-    "pytest-cov",
-    "httpx",
-    "types-networkx>=3.5.0.20250918",
-    "types-seaborn>=0.13.2.20250914",
-    "scipy-stubs>=1.16.2.0",
-    "pre-commit>=4.3.0",
-]
+dev = ["ruff", "pytest"]
 
 [tool.uv]
-# Google Artifact Registry for private packages
-[[tool.uv.index]]
-name = "ai-tools"
-url = "https://europe-west6-python.pkg.dev/braincapture-ai/ai-tools/simple/"
-type = "index"
-explicit = true
-authenticate = "always"
+# Fixed resolution cut-off, so `uv sync` rebuilds the exact environment the
+# committed figures in clinical/outputs/ and forward_model/figures/ were
+# rendered in — matplotlib 3.10.7, pandas 2.3.3, numpy 2.3.4, mne 1.10.2.
+# That is what makes `git diff` after a run a meaningful
+# reproduction check rather than a font-version diff. Delete this line to
+# resolve against current releases; the numbers are unaffected.
+exclude-newer = "2025-11-15T00:00:00Z"
 
-[[tool.uv.index]]
-name = "galen-tools"
-url = "https://europe-west6-python.pkg.dev/braincapture-ai/galen-tools/simple/"
-type = "index"
-explicit = true
-authenticate = "always"
-
-[tool.uv.sources]
-eegprep   = { index = "ai-tools" }
-ai-models = { index = "ai-tools" }
-galen-functionality = { index = "galen-tools" }
-
-[build-system]
-requires    = ["setuptools>=65.0", "wheel"]
-build-backend = "setuptools.build_meta"
+[tool.ruff]
+line-length = 100
