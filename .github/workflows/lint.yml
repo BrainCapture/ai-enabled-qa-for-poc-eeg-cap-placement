@@ -1,0 +1,27 @@
+name: Lint
+on:
+  # Lint job will run on all pushes
+  push:
+    
+jobs:
+  # Fast Linting & Security Checks (runs on every push/PR)
+  lint:
+    name: Run Linters and Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install dev dependencies
+        run: |
+          uv tool install lefthook 
+          uv tool install ruff 
+          uv tool install isort 
+          uv tool install mypy 
+          uv tool install bandit
+
+      - name: Run all pre-commit checks
+        run: uv tool run lefthook run pre-commit

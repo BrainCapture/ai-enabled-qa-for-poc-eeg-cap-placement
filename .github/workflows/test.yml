@@ -1,0 +1,85 @@
+name: Test
+on:
+  push:
+    tags:
+      - "v*.*.*" # Run on version tags like v1.0.0, v0.1.0, v0.0.1
+  pull_request:
+    branches: [main]
+
+jobs:
+  # JOB 1: Fast Linting & Security Checks
+  lint:
+    name: Run Linters and Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Install dev dependencies
+        run: |
+          uv tool install lefthook 
+          uv tool install ruff 
+          uv tool install isort 
+          uv tool install mypy 
+          uv tool install bandit
+
+      - name: Run all pre-commit checks
+        run: uv tool run lefthook run pre-commit
+
+  # JOB 2: Authenticated Testing
+  test:
+    name: Run Authenticated Tests
+    runs-on: ubuntu-latest
+    needs: lint # Make sure lint passes before running tests on PR
+    permissions:
+      contents: "read"
+      id-token: "write"
+      pull-requests: "write" # Required for posting comments
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Setup Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Create service account key file
+        run: |
+          echo '${{ secrets.GCP_SERVICE_ACCOUNT }}' > google-service-account-key.json
+          chmod 600 google-service-account-key.json
+
+      - name: Run GCloud authentication script
+        env:
+          SVC_KEY_PATH: ${{ github.workspace }}/google-service-account-key.json
+        run: bash ./scripts/gcloud_auth.sh
+
+      - name: Get access token
+        run: echo "ACCESS_TOKEN=$(gcloud auth print-access-token)" >> $GITHUB_ENV
+
+      - name: Install all dependencies (including from private registry)
+        env:
+          UV_EXTRA_INDEX_URL: "https://oauth2accesstoken:${{ env.ACCESS_TOKEN }}@europe-west6-python.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ai-tools/ai-models/"
+        run: |
+          uv sync --all-extras
+      - name: Run Pytest suite with coverage
+        run: uv run pytest --cov=product_template --cov-report=xml:coverage.xml --junitxml=junit.xml
+
+      - name: Post coverage comment
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          pytest-coverage-path: ./coverage.xml
+          junitxml-path: ./junit.xml
+          title: "Coverage Report"
+          badge-title: "Code Coverage"
+          hide-badge: false
+          hide-report: false
+          create-new-comment: false
+          hide-comment: false
+          report-only-changed-files: false

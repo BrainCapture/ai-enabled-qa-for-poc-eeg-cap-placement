@@ -1,0 +1,61 @@
+[project]
+name = "product-template"
+version = "0.1.0"
+description = "Golden Image for Product Projects"
+readme = "README.md"
+requires-python = ">=3.12, <3.13"
+authors = [
+  { name = "Magnus Guldberg Pedersen", email = "mgp@braincapture.dk" },
+]
+license = { text = "BrainCapture AI Internal Use" }
+
+dependencies = [
+  # GAR private packages
+  "galen-functionality>=0.0.11",
+  # Third-party packages
+  "mne>=1.9.0",
+  "pandas>=2.2.3",
+  "edfio>=0.4.9",
+  "keyrings-google-artifactregistry-auth>=1.1.2",
+]
+
+[dependency-groups]
+dev = [
+    "ruff",
+    "isort",
+    "mypy",
+    "bandit",
+    "lefthook",
+    "pytest",
+    "pytest-cov",
+    "httpx",
+    "types-networkx>=3.5.0.20250918",
+    "types-seaborn>=0.13.2.20250914",
+    "scipy-stubs>=1.16.2.0",
+    "pre-commit>=4.3.0",
+]
+
+[tool.uv]
+# Google Artifact Registry for private packages
+[[tool.uv.index]]
+name = "ai-tools"
+url = "https://europe-west6-python.pkg.dev/braincapture-ai/ai-tools/simple/"
+type = "index"
+explicit = true
+authenticate = "always"
+
+[[tool.uv.index]]
+name = "galen-tools"
+url = "https://europe-west6-python.pkg.dev/braincapture-ai/galen-tools/simple/"
+type = "index"
+explicit = true
+authenticate = "always"
+
+[tool.uv.sources]
+eegprep   = { index = "ai-tools" }
+ai-models = { index = "ai-tools" }
+galen-functionality = { index = "galen-tools" }
+
+[build-system]
+requires    = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"

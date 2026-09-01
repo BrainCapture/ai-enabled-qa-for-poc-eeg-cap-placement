@@ -1,0 +1,68 @@
+version: '3'
+
+dotenv: ['.env']
+
+vars:
+  svc_key: '{{ .GCP_SA_KEY }}'
+  pwd: '{{ .PWD }}'
+  SERVICE_NAME: product-template
+  IMAGE_TAG: latest
+  GCP_PROJECT: "{{.GCP_PROJECT_ID}}"
+  GCP_REGION: europe-west6
+  GAR_REPO: product-template
+  DOCKERHUB_REPO: braincapturedk/product-template
+  IMAGE_URI: "{{.DOCKERHUB_REPO}}:{{.IMAGE_TAG}}"
+
+tasks:
+  hello:
+    desc: Initial task for setup
+    cmds:
+      - bash scripts/setup.sh
+      - echo "Successfully installed Taskfile"
+  # INFRA TASKS
+  sync:
+    desc: Auths the GCP service account and syncs uv artifacts
+    cmds:
+      - bash scripts/gcloud_auth.sh
+      - uv sync --all-extras
+  # BUILD TASKS
+  build:
+    desc: "Build the Docker image for the inference service."
+    summary: |
+      Builds the Docker image using the project's Dockerfile.
+      Requires '<your-SA-key>.json'.
+      Usage:
+        task build
+        task build IMAGE_TAG=v1.0.1
+    cmds:
+      - |
+        if [ ! -f {{.GCP_SA_KEY}} ]; then
+          echo "Error: Service account key '<your-SA-key>.json' not found (Hint: check your .env file for GCP_SA_KEY)."
+          exit 1
+        fi
+        echo "Building Docker image: {{.IMAGE_URI}}"
+        DOCKER_BUILDKIT=1 docker build \
+          --secret id=svc,src={{.GCP_SA_KEY}} \
+          -t {{.IMAGE_URI}} .
+  # RUN TASKS
+  run:
+    desc: "Run the Docker container locally for testing."
+    summary: |
+      Runs the built Docker container, mapping port 8000 and loading environment
+      variables from the local '.env' file.
+    cmds:
+      - |
+        if [ ! -f ".env" ]; then
+          echo "Warning: .env file not found. Secrets may not be loaded correctly."
+          exit 1
+        fi
+        docker run --rm -it \
+          --env-file .env \
+          -e GOOGLE_APPLICATION_CREDENTIALS=/app/gcp-key.json \
+          -v "$(pwd)/{{.svc_key}}":/app/gcp-key.json:ro \
+          {{.IMAGE_URI}}
+
+  help:
+    desc: Show this help message
+    cmds:
+      - task --list
