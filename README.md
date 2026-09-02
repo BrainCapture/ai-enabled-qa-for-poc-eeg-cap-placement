@@ -168,7 +168,8 @@ signed-deviation distributions, per-participant heatmaps, and breakdowns by
 sex, age, hair characteristics and trial order. `revision_analyses.py` writes
 [`clinical/outputs/part2-analyses.md`](clinical/outputs/part2-analyses.md), the
 prose report covering per-electrode MAE by arm, participant characteristics
-against positioning accuracy, and both failure cases.
+against positioning accuracy, and both failure cases, plus the figure the
+characteristics section embeds.
 
 ---
 

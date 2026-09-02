@@ -66,6 +66,18 @@ derived — are used as head-size covariates.
 | App-guided | Hair length | Mann–Whitney | 30 | Medium/Long 0.96 vs Short/Shaved 0.91 cm | 0.738 | 0.846 |
 | App-guided | Structural styling | not tested | 29 | group too small (min n = 1) | — | — |
 
+![Participant characteristics vs. positioning error](19_characteristics_vs_error.png)
+
+*Figure S1. The reviewer's two hypotheses — head size and hair —
+against per-participant mean absolute positioning error, by arm.
+Points are rank associations on a common scale (Spearman's ρ for the
+arcs, rank-biserial r for the named hair group); positive means higher
+error, and bars are 95% percentile bootstrap intervals. Two
+associations separate from zero, both in the App-guided arm, and
+neither survives Benjamini–Hochberg correction; the curly/coily
+contrast rests on three participants. The remaining characteristics
+are in the table above and are null in both arms.*
+
 **No characteristic survives correction for multiple comparisons.**
 Two associations reach nominal significance before correction, both in
 the App-guided arm and both worth reporting honestly rather than

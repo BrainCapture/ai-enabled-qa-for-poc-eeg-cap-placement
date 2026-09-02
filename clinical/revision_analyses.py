@@ -24,11 +24,14 @@ Run:  python3 revision_analyses.py
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from scipy import stats
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -36,6 +39,20 @@ sys.path.insert(0, str(Path(__file__).parent))
 import analyze_study as base  # noqa: E402
 
 OUT = Path(__file__).parent / "outputs" / "part2-analyses.md"
+FIG = Path(__file__).parent / "outputs" / "19_characteristics_vs_error.png"
+
+#: Rows of the figure, in order, keyed by `Characteristic` in the results
+#: table. Only the reviewer's own hypotheses — head size and hair — are drawn.
+#: Hair texture is included because it reaches nominal significance and is
+#: reported in the response; leaving the one uncomfortable result out of the
+#: figure while keeping it in the table would be exactly the selective
+#: presentation the response disclaims.
+FIG_ROWS = {
+    "Preauricular arc (cm)": "Head size\n(preauricular arc)",
+    "Nasion–inion arc (cm)": "Head size\n(nasion–inion arc)",
+    "Hair length": "Hair length\n(medium/long, n = 17)",
+    "Hair texture": "Hair texture\n(curly/coily, n = 3)",
+}
 
 ABS_COLS = [f"{e}_true_abs" for e in base.ELEC_KEYS]
 
@@ -157,6 +174,51 @@ def _fdr(pvals: list[float]) -> list[float]:
     return adjusted.tolist()
 
 
+#: Bootstrap replicates for the confidence intervals drawn in the figure. The
+#: intervals are illustrative of how little this cohort constrains any of these
+#: effects; the reported inference is the rank test and its FDR-adjusted value.
+N_BOOT = 5000
+BOOT_SEED = 0
+
+
+def _spearman_rho(x: np.ndarray, y: np.ndarray) -> float:
+    return float(stats.spearmanr(x, y).statistic)
+
+
+def _rank_biserial(a: np.ndarray, b: np.ndarray) -> float:
+    """Rank-biserial correlation for `a` against `b`, on Spearman's scale.
+
+    Positive means group `a` tends to have the larger error. Puts the binary
+    contrasts on the same [-1, 1] axis as the Spearman coefficients so a single
+    figure can carry both.
+    """
+    u = stats.mannwhitneyu(a, b).statistic
+    return float(2.0 * u / (len(a) * len(b)) - 1.0)
+
+
+def _boot_ci(fn, a: np.ndarray, b: np.ndarray, *, paired: bool = True,
+             ) -> tuple[float, float]:
+    """Percentile bootstrap CI. Paired resamples observation pairs; unpaired
+    resamples within each group, preserving group sizes."""
+    rng = np.random.default_rng(BOOT_SEED)
+    reps = []
+    for _ in range(N_BOOT):
+        if paired:
+            idx = rng.integers(0, len(a), len(a))
+            sample = (a[idx], b[idx])
+        else:
+            sample = (a[rng.integers(0, len(a), len(a))],
+                      b[rng.integers(0, len(b), len(b))])
+        if min(len(np.unique(sample[0])), len(np.unique(sample[1]))) < 2:
+            continue
+        reps.append(fn(*sample))
+    reps = np.asarray(reps, dtype=float)
+    reps = reps[np.isfinite(reps)]
+    if len(reps) < N_BOOT // 10:
+        return float("nan"), float("nan")
+    return float(np.percentile(reps, 2.5)), float(np.percentile(reps, 97.5))
+
+
 def characteristics(df: pd.DataFrame) -> pd.DataFrame:
     """Participant characteristics against per-participant MAE, by arm.
 
@@ -172,9 +234,13 @@ def characteristics(df: pd.DataFrame) -> pd.DataFrame:
             if len(valid) < MIN_GROUP:
                 continue
             rho, p = stats.spearmanr(valid[col], valid["mae"])
+            lo, hi = _boot_ci(_spearman_rho, valid[col].to_numpy(),
+                              valid["mae"].to_numpy())
             rows.append({
                 "Arm": label, "Characteristic": name, "Test": "Spearman",
                 "n": len(valid), "Effect": f"rho = {rho:+.2f}", "p": p,
+                "effect_size": rho, "ci_lo": lo, "ci_hi": hi,
+                "Label": name.split(" (")[0], "n_min": len(valid),
             })
 
         for col, name in CATEGORICAL.items():
@@ -185,22 +251,81 @@ def characteristics(df: pd.DataFrame) -> pd.DataFrame:
                     "Arm": label, "Characteristic": name, "Test": "not tested",
                     "n": len(valid),
                     "Effect": f"group too small (min n = {groups.size().min() if len(groups) else 0})",
-                    "p": np.nan,
+                    "p": np.nan, "effect_size": np.nan,
+                    "ci_lo": np.nan, "ci_hi": np.nan,
+                    "Label": name, "n_min": int(groups.size().min()) if len(groups) else 0,
                 })
                 continue
             (name_a, a), (name_b, b) = list(groups)
             p = stats.mannwhitneyu(a, b).pvalue
+            lo, hi = _boot_ci(_rank_biserial, a.to_numpy(), b.to_numpy(),
+                              paired=False)
             rows.append({
                 "Arm": label, "Characteristic": name, "Test": "Mann–Whitney",
                 "n": len(valid),
                 "Effect": f"{name_a} {a.mean():.2f} vs {name_b} {b.mean():.2f} cm",
                 "p": p,
+                "effect_size": _rank_biserial(a.to_numpy(), b.to_numpy()),
+                "ci_lo": lo, "ci_hi": hi,
+                "Label": f"{name} ({name_a.lower()}, n = {len(a)})",
+                "n_min": int(groups.size().min()),
             })
 
     out = pd.DataFrame(rows)
     tested = out["p"].notna()
     out.loc[tested, "p (FDR)"] = _fdr(out.loc[tested, "p"].tolist())
     return out
+
+
+def characteristics_figure(chars: pd.DataFrame) -> Path:
+    """The reviewer's two hypotheses — head size and hair — on one axis.
+
+    Restricted to what was asked. The full set of characteristics is in the
+    table above; a row per characteristic would give eighteen null estimates
+    the visual weight of a result. Continuous predictors contribute Spearman's
+    rho and binary ones the rank-biserial correlation, which share the [-1, 1]
+    scale, so the rows are comparable. Statistics come from `chars`, so the
+    figure cannot drift from the table beside it.
+    """
+    sns.set_theme(style="whitegrid", palette="muted", font_scale=1.0)
+    ypos = {c: len(FIG_ROWS) - 1 - i for i, c in enumerate(FIG_ROWS)}
+
+    fig, ax = plt.subplots(figsize=(8.5, 3.4))
+    ax.axvline(0, color="0.35", lw=1.0, zorder=1)
+
+    for method, label, offset in (("Pro", "Expert", 0.16), ("App", "App-guided", -0.16)):
+        arm = chars[chars["Arm"] == label]
+        colour = base.METHOD_SIMPLE_PAL[method]
+        drawn = False
+        for _, r in arm.iterrows():
+            if r["Characteristic"] not in ypos:
+                continue
+            y = ypos[r["Characteristic"]] + offset
+            ax.plot([r["ci_lo"], r["ci_hi"]], [y, y],
+                    color=colour, lw=1.6, alpha=0.45, solid_capstyle="round", zorder=2)
+            ax.scatter(r["effect_size"], y, color=colour, s=58, zorder=3,
+                       edgecolors="white", linewidth=1.0,
+                       label=label if not drawn else None)
+            drawn = True
+            if r["p"] < 0.05:
+                ax.annotate(f"p = {r['p']:.3f}, FDR {r['p (FDR)']:.2f}",
+                            (r["ci_hi"], y), xytext=(7, 0),
+                            textcoords="offset points", va="center",
+                            fontsize=8.5, color="0.25")
+
+    ax.set_yticks(list(ypos.values()))
+    ax.set_yticklabels([FIG_ROWS[c] for c in ypos])
+    ax.set_ylim(-0.5, len(FIG_ROWS) - 0.5)
+    ax.set_xlim(-1.05, 1.35)
+    ax.set_xticks([-1.0, -0.5, 0.0, 0.5, 1.0])
+    ax.set_xlabel("← lower error          rank association          higher error →",
+                  fontsize=10, color="0.25")
+    ax.grid(axis="y", visible=False)
+    ax.legend(loc="lower right", frameon=True, fontsize=9)
+    fig.tight_layout()
+    fig.savefig(FIG, dpi=150, facecolor="white")
+    plt.close(fig)
+    return FIG
 
 
 # ── Analysis 3: the two incorrect placements ─────────────────────────────────
@@ -239,6 +364,7 @@ def main() -> None:
     elec = per_electrode(df)
     chars = characteristics(df)
     profile, failure_meta = failures(df)
+    figure = characteristics_figure(chars)
 
     cohort_mae = df.groupby("method_simple")["mae"].agg(["mean", "std"])
 
@@ -328,6 +454,19 @@ def main() -> None:
             f"| {r['Effect']} | {_fmt_p(r['p'])} "
             f"| {_fmt_p(r.get('p (FDR)', np.nan))} |"
         )
+    add("")
+    add(f"![Participant characteristics vs. positioning error]"
+        f"({os.path.relpath(figure, OUT.parent)})")
+    add("")
+    add("*Figure S1. The reviewer\'s two hypotheses — head size and hair —")
+    add("against per-participant mean absolute positioning error, by arm.")
+    add("Points are rank associations on a common scale (Spearman\'s ρ for the")
+    add("arcs, rank-biserial r for the named hair group); positive means higher")
+    add("error, and bars are 95% percentile bootstrap intervals. Two")
+    add("associations separate from zero, both in the App-guided arm, and")
+    add("neither survives Benjamini–Hochberg correction; the curly/coily")
+    add("contrast rests on three participants. The remaining characteristics")
+    add("are in the table above and are null in both arms.*")
     add("")
     add("**No characteristic survives correction for multiple comparisons.**")
     add("Two associations reach nominal significance before correction, both in")
