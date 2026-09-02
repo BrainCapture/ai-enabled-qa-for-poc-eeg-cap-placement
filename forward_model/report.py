@@ -23,6 +23,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 
 HERE = os.path.dirname(__file__)
 CACHE = os.path.join(HERE, "cache")
@@ -34,9 +36,15 @@ COLOR_SINGLE = "#EE7733"
 INK = "#222222"
 MUTED = "#767676"
 
+#: The margin is prespecified on the paired *difference* in mean absolute
+#: positioning error, Delta = MAE(App) - MAE(Expert), not on an absolute
+#: displacement. So the placement the margin would still accept as non-inferior
+#: is the Expert's own MAE plus the margin, and the margin itself is a distance
+#: *along* the x-axis rather than a point on it. The figure is drawn that way.
 MARGIN_CM = 0.5
 EXPERT_CM = 0.855
 APP_CM = 0.938
+LIMIT_CM = EXPERT_CM + MARGIN_CM
 
 #: A 2:1 left/right amplitude ratio - the usual threshold for calling an
 #: interhemispheric asymmetry - corresponds to an asymmetry index of 1/3.
@@ -61,24 +69,32 @@ STYLE = {
 
 
 def _curve(df: pd.DataFrame, value: str, spread: str | None = None,
-           x_col: str = "realised_mm_mean"):
+           x_col: str = "realised_mm_mean", scale: float = 100.0):
     """Mean across directions/targets at each displacement, sorted by x.
 
     `x_col` differs by mode. A cap shift moves every electrode, so the array
     mean is the right abscissa; a single-electrode displacement moves exactly
     one, so the array mean would divide the true displacement by the number of
     channels - use the max (that electrode's own displacement) instead.
+    `scale` converts the stored fraction to the plotted unit.
     """
     agg = {"realised": (x_col, "mean"), "y": (value, "mean")}
     if spread:
         agg["hi"] = (spread, "mean")
     out = df.groupby("magnitude_cm").agg(**agg).reset_index()
     out["x"] = out["realised"] / 10.0  # mm -> cm
-    return out.sort_values("x")
+    out = out.sort_values("x")
+    out.attrs["scale"] = scale
+    return out
 
 
 def interp(curve: pd.DataFrame, x: float, col: str = "y") -> float:
     return float(np.interp(x, curve["x"], curve[col]))
+
+
+def at(curve: pd.DataFrame, x: float, col: str = "y") -> float:
+    """Curve value at `x` in plotted units."""
+    return interp(curve, x, col) * curve.attrs["scale"]
 
 
 def linearity_check(curve: pd.DataFrame) -> float:
@@ -89,21 +105,62 @@ def linearity_check(curve: pd.DataFrame) -> float:
     return float(1 - resid.var() / y.var())
 
 
-def _reference_lines(ax, ymax: float, label: bool) -> None:
-    ax.axvspan(EXPERT_CM, APP_CM, color=MUTED, alpha=0.18, lw=0, zorder=0)
-    ax.axvline(MARGIN_CM, color=INK, ls="--", lw=1.1, zorder=1)
+def _margin_band(ax, label: bool) -> None:
+    """Draw the margin as what it is: a span on the x-axis.
+
+    Three marks, three different kinds of claim. Expert MAE is the reference
+    standard the study measures against; Expert + margin is the worst placement
+    the non-inferiority test would still accept; App-guided is what was actually
+    observed. The margin is the gap between the first two.
+    """
+    ymax = ax.get_ylim()[1]
+    ax.axvspan(EXPERT_CM, LIMIT_CM, color=INK, alpha=0.05, lw=0, zorder=0)
+    ax.axvline(EXPERT_CM, color=MUTED, ls="--", lw=1.2, zorder=1)
+    ax.axvline(LIMIT_CM, color=INK, ls="--", lw=1.2, zorder=1)
+    ax.axvline(APP_CM, color=COLOR_CAP, ls="-", lw=1.0, alpha=0.55, zorder=1)
+
+    y = ymax * 0.90
+    ax.annotate("", xy=(LIMIT_CM, y), xytext=(EXPERT_CM, y), zorder=6,
+                arrowprops=dict(arrowstyle="<->", color=INK, lw=1.1,
+                                shrinkA=0, shrinkB=0))
+    ax.annotate("0.5 cm margin", xy=((EXPERT_CM + LIMIT_CM) / 2, y),
+                xytext=(0, 5), textcoords="offset points", ha="center",
+                va="bottom", fontsize=9, weight="bold", color=INK, zorder=6)
     if label:
-        ax.annotate(
-            "0.5 cm\nmargin",
-            xy=(MARGIN_CM, ymax), xytext=(MARGIN_CM - 0.04, ymax),
-            ha="right", va="top", fontsize=9, color=INK, linespacing=1.25,
-        )
-        ax.annotate(
-            "measured\nplacement error",
-            xy=((EXPERT_CM + APP_CM) / 2, ymax),
-            xytext=((EXPERT_CM + APP_CM) / 2 + 0.06, ymax),
-            ha="left", va="top", fontsize=9, color=MUTED, linespacing=1.25,
-        )
+        ax.annotate("Expert\n0.855 cm", xy=(EXPERT_CM - 0.04, ymax * 0.99),
+                    ha="right", va="top", fontsize=8.5, color=MUTED,
+                    linespacing=1.25)
+        ax.annotate("worst placement the\nmargin would accept\n1.355 cm",
+                    xy=(LIMIT_CM + 0.04, ymax * 0.99), ha="left", va="top",
+                    fontsize=8.5, color=INK, linespacing=1.25)
+
+
+def _readouts(ax, curve, fmt: str, label_app: bool) -> None:
+    """Values on the cap curve at the three marked placements."""
+    pts = [(EXPERT_CM, MUTED, "o", 6.5, "normal"),
+           (APP_CM, COLOR_CAP, "D", 5.5, "normal"),
+           (LIMIT_CM, INK, "o", 7.0, "bold")]
+    for x, color, marker, size, weight in pts:
+        y = at(curve, x)
+        ax.plot([x], [y], marker=marker, ms=size, mfc=color, mec="white",
+                mew=1.3, zorder=6)
+        if marker == "D" and not label_app:
+            continue
+        # Expert and App-guided sit only 0.083 cm apart, so their labels are
+        # pushed to opposite sides of the curve rather than offset along it.
+        # The curves rise monotonically, so above-left and below-right are the
+        # only sides that stay clear of the line whatever the panel's scale:
+        # left of a point the curve is below it, right of it the curve is
+        # above. Every offset below must keep to those two quadrants - an
+        # above-right label is crossed by the line at slopes as gentle as
+        # panel A's, and buried by it at panel C's.
+        offsets = {EXPERT_CM: (-11, 6, "right", "bottom"),
+                   APP_CM: (6, -9, "left", "top"),
+                   LIMIT_CM: (9, -8, "left", "top")}
+        dx, dy, ha, va = offsets[x]
+        ax.annotate(fmt.format(y), xy=(x, y), xytext=(dx, dy),
+                    textcoords="offset points", ha=ha, va=va,
+                    fontsize=9.5, weight=weight, color=color, zorder=7)
 
 
 def build_figure(summary: pd.DataFrame, dipole: pd.DataFrame | None) -> dict:
@@ -111,108 +168,101 @@ def build_figure(summary: pd.DataFrame, dipole: pd.DataFrame | None) -> dict:
     single = summary[summary["mode"] == "single"]
 
     amp_cap = _curve(cap, "peak_rel_err_median", "peak_rel_err_p90")
-    amp_single = _curve(single, "peak_rel_err_median", "peak_rel_err_p90",
-                        x_col="realised_mm_max")
-    asy_cap = _curve(cap, "d_asymmetry_p90")
-    asy_single = _curve(single, "d_asymmetry_p90", x_col="realised_mm_max")
+    amp_single = _curve(single, "peak_rel_err_median", x_col="realised_mm_max")
+    asy_cap = _curve(cap, "d_asymmetry_median", "d_asymmetry_p90")
+    asy_single = _curve(single, "d_asymmetry_median", x_col="realised_mm_max")
 
     plt.rcParams.update(STYLE)
     n_panels = 3 if dipole is not None else 2
-    fig, axes = plt.subplots(1, n_panels, figsize=(4.1 * n_panels, 3.5))
+    fig, axes = plt.subplots(1, n_panels, figsize=(4.4 * n_panels, 4.0))
 
-    # ── Panel A: amplitude change ────────────────────────────────────────────
-    ax = axes[0]
-    for curve, color, name in (
-        (amp_cap, COLOR_CAP, "Whole-cap shift"),
-        (amp_single, COLOR_SINGLE, "Single electrode"),
-    ):
-        ax.fill_between(curve["x"], curve["y"] * 100, curve["hi"] * 100,
-                        color=color, alpha=0.15, lw=0)
-        ax.plot(curve["x"], curve["y"] * 100, color=color, lw=2,
-                marker="o", ms=4.5, label=name, zorder=3)
-    ax.set_xlabel("Electrode displacement (cm)")
-    ax.set_ylabel("Change in scalp potential\n(% of peak amplitude)")
-    ax.set_title("A  Signal amplitude", loc="left", weight="bold")
-    _reference_lines(ax, ax.get_ylim()[1], label=True)
-    ax.legend(frameon=False, loc="lower right")
+    def draw(ax, cap_curve, single_curve, ylabel, title, ylim, fmt, first):
+        ax.fill_between(cap_curve["x"],
+                        cap_curve["y"] * cap_curve.attrs["scale"],
+                        cap_curve["hi"] * cap_curve.attrs["scale"],
+                        color=COLOR_CAP, alpha=0.15, lw=0, zorder=2)
+        ax.plot(cap_curve["x"], cap_curve["y"] * cap_curve.attrs["scale"],
+                color=COLOR_CAP, lw=2.2, zorder=3, label="Whole-cap shift")
+        if single_curve is not None:
+            ax.plot(single_curve["x"],
+                    single_curve["y"] * single_curve.attrs["scale"],
+                    color=COLOR_SINGLE, lw=1.4, ls=(0, (5, 2)), zorder=3,
+                    label="Single electrode")
+        ax.set_xlabel("Mean absolute positioning error (cm)")
+        ax.set_ylabel(ylabel)
+        ax.set_title(title, loc="left", weight="bold")
+        ax.set_ylim(0, ylim)
+        _margin_band(ax, label=first)
+        _readouts(ax, cap_curve, fmt, label_app=first)
 
-    # ── Panel B: interhemispheric asymmetry ──────────────────────────────────
+    draw(axes[0], amp_cap, amp_single,
+         "Change in scalp potential\n(% of peak amplitude)",
+         "A  Signal amplitude", 46, "{:.1f}%", True)
+
     ax = axes[1]
-    for curve, color, name in (
-        (asy_cap, COLOR_CAP, "Whole-cap shift"),
-        (asy_single, COLOR_SINGLE, "Single electrode"),
-    ):
-        ax.plot(curve["x"], curve["y"] * 100, color=color, lw=2,
-                marker="o", ms=4.5, label=name, zorder=3)
-    ax.axhline(CLINICAL_ASYMMETRY_PP, color=INK, ls=":", lw=1.2)
-    ax.annotate(
-        "clinical asymmetry threshold (2:1)",
-        xy=(1.56, CLINICAL_ASYMMETRY_PP), xytext=(1.56, CLINICAL_ASYMMETRY_PP + 0.7),
-        fontsize=9, color=INK, va="bottom", ha="right",
-    )
-    ax.set_ylim(0, CLINICAL_ASYMMETRY_PP * 1.18)
-    ax.set_xlabel("Electrode displacement (cm)")
-    ax.set_ylabel("Change in left–right asymmetry\n(percentage points)")
-    ax.set_title("B  Interhemispheric asymmetry", loc="left", weight="bold")
-    _reference_lines(ax, ax.get_ylim()[1], label=False)
-    ax.legend(frameon=False, loc="lower right")
+    draw(ax, asy_cap, asy_single,
+         "Change in left\u2013right asymmetry\n(percentage points)",
+         "B  Interhemispheric asymmetry", CLINICAL_ASYMMETRY_PP * 1.38,
+         "{:.1f} pp", False)
+    ax.axhline(CLINICAL_ASYMMETRY_PP, color=INK, ls=":", lw=1.3, zorder=4)
+    ax.annotate("clinical asymmetry threshold (2:1)",
+                xy=(0.04, CLINICAL_ASYMMETRY_PP + 0.6), ha="left", va="bottom",
+                fontsize=9, color=INK, zorder=6)
 
     headline: dict = {}
-
-    # ── Panel C: dipole localisation error ───────────────────────────────────
     if dipole is not None:
-        ax = axes[2]
-        cap_fits = dipole[dipole["mode"] == "cap"]
-        stats = (
-            cap_fits.groupby("magnitude_cm")
-            .agg(
-                x=("realised_mm_mean", "mean"),
-                med=("error_mm", "median"),
-                lo=("error_mm", lambda s: s.quantile(0.25)),
-                hi=("error_mm", lambda s: s.quantile(0.75)),
-            )
-            .reset_index()
-        )
-        stats["x"] /= 10.0
-        stats = stats.sort_values("x")
-        ax.fill_between(stats["x"], stats["lo"], stats["hi"],
-                        color=COLOR_CAP, alpha=0.15, lw=0)
-        ax.plot(stats["x"], stats["med"], color=COLOR_CAP, lw=2,
-                marker="o", ms=4.5, label="Whole-cap shift", zorder=3)
-        ax.set_xlabel("Electrode displacement (cm)")
-        ax.set_ylabel("Dipole localisation error (mm)")
-        ax.set_title("C  Source localisation", loc="left", weight="bold")
-        _reference_lines(ax, ax.get_ylim()[1], label=False)
-        ax.legend(frameon=False, loc="upper left")
-        loc_curve = stats.rename(columns={"med": "y"})
-        headline["loc_margin_mm"] = interp(loc_curve, MARGIN_CM)
-        headline["loc_expert_mm"] = interp(loc_curve, EXPERT_CM)
-        headline["loc_app_mm"] = interp(loc_curve, APP_CM)
-        headline["loc_baseline_floor_mm"] = float(
-            dipole[dipole["mode"] == "baseline"]["error_mm"].mean()
-        )
+        st = (dipole[dipole["mode"] == "cap"].groupby("magnitude_cm")
+              .agg(realised=("realised_mm_mean", "mean"),
+                   y=("error_mm", "median"),
+                   hi=("error_mm", lambda s: s.quantile(0.90)))
+              .reset_index())
+        st["x"] = st["realised"] / 10.0
+        st = st.sort_values("x")
+        st.attrs["scale"] = 1.0
+        draw(axes[2], st, None, "Dipole localisation error (mm)",
+             "C  Source localisation", 16.5, "{:.1f} mm", False)
+        floor = float(dipole[dipole["mode"] == "baseline"]["error_mm"].mean())
+        axes[2].annotate(f"method floor {floor:.2f} mm", xy=(0.04, 0.4),
+                         fontsize=8.5, color=MUTED, ha="left", va="bottom")
+        headline.update({
+            "loc_expert_mm": at(st, EXPERT_CM),
+            "loc_app_mm": at(st, APP_CM),
+            "loc_limit_mm": at(st, LIMIT_CM),
+            "loc_increment_mm": at(st, LIMIT_CM) - at(st, EXPERT_CM),
+            "loc_baseline_floor_mm": floor,
+        })
 
     for ax in axes:
-        ax.set_xlim(0, 1.6)
+        ax.set_xlim(0, 1.62)
         ax.grid(axis="y", color=MUTED, alpha=0.18, lw=0.6)
         ax.set_axisbelow(True)
+
+    handles = [
+        Line2D([], [], color=COLOR_CAP, lw=2.2, label="Whole-cap shift"),
+        Patch(facecolor=COLOR_CAP, alpha=0.20, lw=0,
+              label="median to 90th percentile across sources"),
+        Line2D([], [], color=COLOR_SINGLE, lw=1.4, ls=(0, (5, 2)),
+               label="Single electrode (median)"),
+        Line2D([], [], color=COLOR_CAP, marker="D", ls="-", lw=1.0, ms=5.5,
+               alpha=0.75, label="App-guided, observed (0.938 cm)"),
+    ]
+    fig.legend(handles=handles, loc="lower center", ncol=4, frameon=False,
+               bbox_to_anchor=(0.5, -0.05), fontsize=9.5)
 
     fig.tight_layout()
     os.makedirs(os.path.dirname(FIGURE), exist_ok=True)
     fig.savefig(FIGURE, dpi=300, bbox_inches="tight")
     plt.close(fig)
 
-    headline.update({
-        "amp_margin_cap_pct": interp(amp_cap, MARGIN_CM) * 100,
-        "amp_expert_cap_pct": interp(amp_cap, EXPERT_CM) * 100,
-        "amp_app_cap_pct": interp(amp_cap, APP_CM) * 100,
-        "amp_margin_single_pct": interp(amp_single, MARGIN_CM) * 100,
-        "asy_margin_cap_pp": interp(asy_cap, MARGIN_CM) * 100,
-        "asy_expert_cap_pp": interp(asy_cap, EXPERT_CM) * 100,
-        "asy_app_cap_pp": interp(asy_cap, APP_CM) * 100,
-        "linearity_r2_amp_cap": linearity_check(amp_cap),
-        "linearity_r2_amp_single": linearity_check(amp_single),
-    })
+    for name, curve, unit in (("amp", amp_cap, 100), ("asy", asy_cap, 100)):
+        headline[f"{name}_expert"] = at(curve, EXPERT_CM)
+        headline[f"{name}_app"] = at(curve, APP_CM)
+        headline[f"{name}_limit"] = at(curve, LIMIT_CM)
+        headline[f"{name}_increment"] = at(curve, LIMIT_CM) - at(curve, EXPERT_CM)
+        headline[f"{name}_expert_p90"] = at(curve, EXPERT_CM, "hi")
+        headline[f"{name}_limit_p90"] = at(curve, LIMIT_CM, "hi")
+    headline["amp_single_at_2cm"] = at(amp_single, 2.0)
+    headline["linearity_r2_amp_cap"] = linearity_check(amp_cap)
     return headline
 
 

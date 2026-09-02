@@ -44,17 +44,12 @@ the margin can be read against the study's own empirical baseline.
 ![Forward-model displacement curves](figures/forward_displacement.png)
 
 Every metric is linear in displacement over the range that matters (R² = 1.00),
-so the margin can be read straight off the curves. At **0.5 cm** a whole-cap
-shift changes scalp potential by 7.6 % of peak amplitude, moves the
-interhemispheric asymmetry index by 9.4 percentage points — well under the
-~33 pp that corresponds to a clinically called 2:1 asymmetry — and displaces a
-fitted dipole by 3.8 mm. The grey band marks the placement error actually
-measured in the trial (0.855 cm expert, 0.938 cm app-guided), where the same
-three quantities reach 12.9–14.1 %, 15.7–17.1 pp and 6.6–7.2 mm. The 0.5 cm
-margin is therefore stricter than the accuracy either arm achieved in practice,
-and the signal-level consequence of missing it by that much is small.
-
-Reprint these numbers with `python3 report.py`.
+so the margin can be read straight off the curves. The dashed lines mark the
+Expert error measured in this study (0.855 cm) and the least accurate
+placement the margin would still accept (0.855 + 0.5 = 1.355 cm); the diamond
+is the App-guided error actually observed (0.938 cm). This is Supplementary
+Material 5 of the paper; run `python3 report.py` to reprint the headline
+numbers behind the figure.
 
 ## Files
 
@@ -67,9 +62,9 @@ Reprint these numbers with `python3 report.py`.
 | `report.py` | Supplementary figure + headline numbers |
 
 ```bash
-python3 forward.py      # ~3 min,  writes cache/leadfield.npz (~58 MB)
+python3 forward.py      # ~3 min, writes cache/leadfield.npz (~58 MB)
 python3 dipole_fit.py   # ~20 min, writes cache/dipole_fit.csv
-python3 report.py       # ~2 s,    writes figures/forward_displacement.png
+python3 report.py       # writes figures/forward_displacement.png
 ```
 
 `cache/summary.csv` and `cache/dipole_fit.csv` are committed, so `report.py`
@@ -78,8 +73,8 @@ in a couple of seconds. Only the 58 MB leadfield is left out of the repository;
 run `forward.py` and `dipole_fit.py` to rebuild the whole chain from the
 template head.
 
-Requires `mne` and the fsaverage dataset, fetched automatically to
-`~/mne_data/` on first run. No MRI, FreeSurfer or GPU needed.
+Requires `mne` (already in the repo `.venv`) and the fsaverage dataset, fetched
+automatically to `~/mne_data/` on first run. No MRI, FreeSurfer or GPU needed.
 
 ## Design notes worth knowing before editing
 
