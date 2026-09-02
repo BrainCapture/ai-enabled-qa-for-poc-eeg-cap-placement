@@ -1,8 +1,8 @@
 # Forward-model study: how much does a displaced electrode change the EEG?
 
-Supports the **0.5 cm non-inferiority margin** in the clinical paper. Reviewer 2
-objected that the margin rests on an assertion about volume-conduction smoothing
-rather than a demonstration; this module supplies the demonstration.
+Supports the **0.5 cm non-inferiority margin** in the clinical paper, which was
+justified by an assertion about volume-conduction smoothing rather than a
+demonstration; this module supplies the demonstration.
 
 ## The question
 
@@ -22,7 +22,7 @@ Two perturbation modes:
 | Mode | What it represents |
 |---|---|
 | **Whole-cap shift** | The dominant real-world error. Because inter-electrode geometry inside a cap is fixed, a misplaced cap is a *rigid rotation* about the head centre, not independent per-electrode jitter. Electrodes near the rotation axis (T7/T8 for an anteroposterior slip) move less — which is physically correct. |
-| **Single electrode** | One electrode displaced in 8 tangential directions. The literal form of the reviewer's question, comparable to Wang & Gotman (2001). |
+| **Single electrode** | One electrode displaced in 8 tangential directions, comparable to Wang & Gotman (2001). |
 
 Displacements sweep 0.25–2.0 cm and include **0.855 cm** and **0.938 cm** — the
 Expert and App-guided mean absolute errors measured in the clinical study — so

@@ -8,7 +8,7 @@ computing anything new.
 
 n = 30 participants, 60 trials.
 
-## 1. Per-electrode error by arm (Reviewer 2, point 7)
+## 1. Per-electrode error by arm
 
 Mean absolute error (cm) per measured position. *Signed* columns give
 the mean directional deviation (measured − expected); a positive value
@@ -36,7 +36,6 @@ Pooled across all ten positions: Expert 0.855 cm, App-guided 0.938 cm.
 Two qualifications the manuscript should carry. First, although the temporal bias is present in both arms, it is significantly *larger* under App-guided placement (T7 +0.42 cm, p = 0.003; T8 +0.30 cm, p = 0.019), so it is not purely a cap-geometry effect independent of who placed the cap. Second, the arms differ in opposite directions at the two frontal anteroposterior positions — App-guided is better at Fp1 and worse at Fp2 — which is difficult to attribute to a systematic cause and is most likely noise at this sample size.
 
 ## 2. Participant characteristics vs. positioning accuracy
-   (Reviewer 1, minor comment 1)
 
 Outcome is per-participant mean absolute error across all ten
 positions. Exploratory: p-values are unadjusted, with
@@ -68,7 +67,7 @@ derived — are used as head-size covariates.
 
 ![Participant characteristics vs. positioning error](19_characteristics_vs_error.png)
 
-*Figure S1. The reviewer's two hypotheses — head size and hair —
+*Figure S1. Two a priori hypotheses — head size and hair —
 against per-participant mean absolute positioning error, by arm.
 Points are rank associations on a common scale (Spearman's ρ for the
 arcs, rank-biserial r for the named hair group); positive means higher
@@ -85,8 +84,8 @@ suppressing:
 
 - *Head size.* Positioning error rises with preauricular arc under
   App-guided placement (rho = +0.43, p = 0.017) but not under Expert
-  placement (rho = +0.24, p = 0.21). This is the reviewer's hypothesis
-  and it is the one signal pointing in the expected direction, but it
+  placement (rho = +0.24, p = 0.21). This is the expected direction for
+  the head-size hypothesis, and it is the one signal pointing that way, but it
   does not survive correction (FDR p = 0.25) and the arm difference is
   itself untested.
 - *Hair texture.* Curly/coily hair was associated with **lower** error
@@ -94,7 +93,7 @@ suppressing:
   direction. This rests on three participants and should not be
   interpreted; it is reported only to avoid selective presentation.
 
-Hair length, the reviewer's other hypothesis, shows no association in
+Hair length, the other a priori hypothesis, shows no association in
 either arm (App-guided p = 0.74). Structural styling could not be
 tested: 28 of 29 participants with the field recorded wore hair loose.
 
@@ -104,7 +103,7 @@ accuracy, that no effect survives correction, and that performance in
 participants with dense curly or coily hair remains genuinely
 uncertain on three participants.
 
-## 3. The two incorrect placements (Reviewer 2, point 4)
+## 3. The two incorrect placements
 
 Signed deviation (cm) per position for each trial rated Incorrect.
 

@@ -202,7 +202,7 @@ def build_variants(
             )
 
     # Mode 2: single-electrode displacement in 8 tangential directions —
-    # the literal form of the reviewer's question, comparable to Wang & Gotman.
+    # comparable to Wang & Gotman (2001).
     angles = np.linspace(0, 2 * np.pi, N_SINGLE_DIRECTIONS, endpoint=False)
     for target in MEASURED:
         pos = base[target]

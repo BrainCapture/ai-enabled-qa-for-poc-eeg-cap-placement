@@ -23,8 +23,8 @@ Self-guided vs Helper-guided comparison — including the paired Wilcoxon test o
 mean absolute error, the T7/T8-excluded sensitivity analysis, Stuart–Maxwell
 tests and linearly weighted Cohen's κ. It writes 16 screen-resolution figures.
 
-`revision_analyses.py` covers the analyses added during review: per-electrode
-mean absolute error by arm, participant characteristics against positioning
+`revision_analyses.py` covers supplementary analyses: per-electrode mean
+absolute error by arm, participant characteristics against positioning
 accuracy, and a description of the two incorrect placements. It re-derives the
 manuscript's headline numbers first and fails loudly if they move. Its prose
 output is written to `outputs/part2-analyses.md`.

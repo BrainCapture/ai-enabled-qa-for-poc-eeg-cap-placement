@@ -143,19 +143,20 @@ frontal and occipital electrodes overlap across all three arms.
 
 ![Forward-model displacement curves](forward_model/figures/forward_displacement.png)
 
-A reviewer objected that the 0.5 cm margin rested on an assertion about
-volume-conduction smoothing rather than a demonstration. This is the
-demonstration: a 3-layer BEM forward solution on the `fsaverage` template head,
-comparing the nominal 19-electrode 10–20 array against displaced arrays over
-20 484 cortical dipoles.
+The 0.5 cm margin was justified by an assertion about volume-conduction
+smoothing rather than a demonstration. This is the demonstration: a 3-layer
+BEM forward solution on the `fsaverage` template head, comparing the nominal
+19-electrode 10–20 array against displaced arrays over 20 484 cortical
+dipoles.
 
-At 0.5 cm, a whole-cap shift changes scalp potential by 7.6 % of peak
-amplitude, moves the interhemispheric asymmetry index by 9.4 percentage points
+The margin is prespecified on the paired difference in mean absolute
+positioning error, so the least accurate placement it would still accept is
+the Expert's own error (0.855 cm) plus the margin — 1.355 cm. At that
+placement, a whole-cap shift changes scalp potential by 20.2 % of peak
+amplitude, moves the interhemispheric asymmetry index by 5.9 percentage points
 (against the ~33 pp corresponding to a clinically called 2:1 asymmetry), and
-displaces a fitted dipole by 3.8 mm. The grey band marks the placement error
-both arms actually achieved in the trial, which is roughly twice the margin.
-The margin is stricter than either arm's measured accuracy, and the
-signal-level cost of missing it by that much is small.
+displaces a fitted dipole by 10.6 mm. The App-guided error actually observed
+(0.938 cm) sits far inside that span.
 
 The study bounds the *signal-level* consequence of a displacement on template
 anatomy. It does not establish clinical-decision equivalence — see the

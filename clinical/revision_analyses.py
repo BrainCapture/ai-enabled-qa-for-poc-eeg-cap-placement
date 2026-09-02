@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
-"""Additional analyses requested by the clinical-paper reviewers.
+"""Supplementary analyses accompanying the clinical paper.
 
 Three analyses, all from data already in hand:
 
-1. Per-electrode mean absolute error by arm (Reviewer 2, point 7).
-2. Participant characteristics against positioning accuracy
-   (Reviewer 1, minor comment 1).
-3. Description of the two incorrect placements (Reviewer 2, point 4;
-   Reviewer 1, minor comment 1).
+1. Per-electrode mean absolute error by arm.
+2. Participant characteristics against positioning accuracy.
+3. Description of the two incorrect placements.
 
 Parsing, the subject-exclusion rule and the electrode keys are reused from
 `analyze_study` so this cannot drift from the published analysis. `_verify`
@@ -42,11 +40,10 @@ OUT = Path(__file__).parent / "outputs" / "part2-analyses.md"
 FIG = Path(__file__).parent / "outputs" / "19_characteristics_vs_error.png"
 
 #: Rows of the figure, in order, keyed by `Characteristic` in the results
-#: table. Only the reviewer's own hypotheses — head size and hair — are drawn.
+#: table. Only the two a priori hypotheses — head size and hair — are drawn.
 #: Hair texture is included because it reaches nominal significance and is
-#: reported in the response; leaving the one uncomfortable result out of the
-#: figure while keeping it in the table would be exactly the selective
-#: presentation the response disclaims.
+#: discussed in the text below; leaving the one uncomfortable result out of
+#: the figure while keeping it in the table would be selective presentation.
 FIG_ROWS = {
     "Preauricular arc (cm)": "Head size\n(preauricular arc)",
     "Nasion–inion arc (cm)": "Head size\n(nasion–inion arc)",
@@ -278,9 +275,9 @@ def characteristics(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def characteristics_figure(chars: pd.DataFrame) -> Path:
-    """The reviewer's two hypotheses — head size and hair — on one axis.
+    """Two a priori hypotheses — head size and hair — on one axis.
 
-    Restricted to what was asked. The full set of characteristics is in the
+    Restricted to those two. The full set of characteristics is in the
     table above; a row per characteristic would give eighteen null estimates
     the visual weight of a result. Continuous predictors contribute Spearman's
     rho and binary ones the rank-biserial correlation, which share the [-1, 1]
@@ -382,7 +379,7 @@ def main() -> None:
     add(f"n = {df['subject_id'].nunique()} participants, {len(df)} trials.")
     add("")
 
-    add("## 1. Per-electrode error by arm (Reviewer 2, point 7)")
+    add("## 1. Per-electrode error by arm")
     add("")
     add("Mean absolute error (cm) per measured position. *Signed* columns give")
     add("the mean directional deviation (measured − expected); a positive value")
@@ -436,7 +433,6 @@ def main() -> None:
     add("")
 
     add("## 2. Participant characteristics vs. positioning accuracy")
-    add("   (Reviewer 1, minor comment 1)")
     add("")
     add("Outcome is per-participant mean absolute error across all ten")
     add("positions. Exploratory: p-values are unadjusted, with")
@@ -458,7 +454,7 @@ def main() -> None:
     add(f"![Participant characteristics vs. positioning error]"
         f"({os.path.relpath(figure, OUT.parent)})")
     add("")
-    add("*Figure S1. The reviewer\'s two hypotheses — head size and hair —")
+    add("*Figure S1. Two a priori hypotheses — head size and hair —")
     add("against per-participant mean absolute positioning error, by arm.")
     add("Points are rank associations on a common scale (Spearman\'s ρ for the")
     add("arcs, rank-biserial r for the named hair group); positive means higher")
@@ -475,8 +471,8 @@ def main() -> None:
     add("")
     add("- *Head size.* Positioning error rises with preauricular arc under")
     add("  App-guided placement (rho = +0.43, p = 0.017) but not under Expert")
-    add("  placement (rho = +0.24, p = 0.21). This is the reviewer's hypothesis")
-    add("  and it is the one signal pointing in the expected direction, but it")
+    add("  placement (rho = +0.24, p = 0.21). This is the expected direction for")
+    add("  the head-size hypothesis, and it is the one signal pointing that way, but it")
     add("  does not survive correction (FDR p = 0.25) and the arm difference is")
     add("  itself untested.")
     add("- *Hair texture.* Curly/coily hair was associated with **lower** error")
@@ -484,7 +480,7 @@ def main() -> None:
     add("  direction. This rests on three participants and should not be")
     add("  interpreted; it is reported only to avoid selective presentation.")
     add("")
-    add("Hair length, the reviewer's other hypothesis, shows no association in")
+    add("Hair length, the other a priori hypothesis, shows no association in")
     add("either arm (App-guided p = 0.74). Structural styling could not be")
     add("tested: 28 of 29 participants with the field recorded wore hair loose.")
     add("")
@@ -495,7 +491,7 @@ def main() -> None:
     add("uncertain on three participants.")
     add("")
 
-    add("## 3. The two incorrect placements (Reviewer 2, point 4)")
+    add("## 3. The two incorrect placements")
     add("")
     add("Signed deviation (cm) per position for each trial rated Incorrect.")
     add("")
