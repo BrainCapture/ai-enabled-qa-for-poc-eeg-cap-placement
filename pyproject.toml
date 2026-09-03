@@ -24,7 +24,7 @@ dev = ["ruff", "pytest"]
 
 [tool.uv]
 # Fixed resolution cut-off, so `uv sync` rebuilds the exact environment the
-# committed figures in clinical/outputs/ and forward_model/figures/ were
+# committed figures in study/outputs/ and forward_model/figures/ were
 # rendered in — matplotlib 3.10.7, pandas 2.3.3, numpy 2.3.4, mne 1.10.2.
 # That is what makes `git diff` after a run a meaningful
 # reproduction check rather than a font-version diff. Delete this line to

@@ -34,11 +34,11 @@ data does not regenerate.
 
 | Directory | Reproduces |
 |---|---|
-| [`clinical/`](clinical/) | Every number, table and figure in the paper, from the de-identified trial data. |
+| [`study/`](study/) | Every number, table and figure in the paper, from the de-identified trial data. |
 | [`forward_model/`](forward_model/) | The volume-conduction study supporting the 0.5 cm non-inferiority margin, on the public `fsaverage` template head. |
 
 ```
-clinical/
+study/
   data/                 4 CSVs — the entire published dataset (52 KB)
     export_public_dataset.py   the allowlist exporter that produced them,
                                published for audit; it will not run here
@@ -62,14 +62,14 @@ uv sync   # exact environment from uv.lock; or:
           # pip install "pandas>=2.2" "numpy>=1.26" "scipy>=1.13" \
           #             "matplotlib>=3.8" "seaborn>=0.13" "mne>=1.7"
 
-cd clinical
+cd study
 python analyze_study.py      # ~8 s  — statistics + figures 01-16
 python revision_analyses.py  # ~2 s  — revision analyses -> outputs/part2-analyses.md
 python paper_figures.py      # ~6 s  — the manuscript composites at 300 dpi
 ```
 
-Those three scripts read only the CSVs in [`clinical/data/`](clinical/data/) and
-write to `clinical/outputs/`. No network access, no credentials, no
+Those three scripts read only the CSVs in [`study/data/`](study/data/) and
+write to `study/outputs/`. No network access, no credentials, no
 configuration, under twenty seconds start to finish.
 
 The forward model has heavier dependencies and downloads MNE's `fsaverage`
@@ -93,7 +93,7 @@ measured minus the position the 10–20 system prescribes.
 What it prescribes depends on the head, so four reference measurements (grey,
 ④–⑦) set each participant's own targets. Two of them, the transverse arc and
 the A–P arc via Cz, are published in
-[`reference_arcs.csv`](clinical/data/reference_arcs.csv) and carry the
+[`reference_arcs.csv`](study/data/reference_arcs.csv) and carry the
 normalisation and the head-size covariate.
 
 Everything downstream is built from those ten numbers per trial. This is
@@ -102,7 +102,7 @@ rather than a plot of the data.
 
 ## Main result — Figure 2
 
-![Figure 2: outcome agreement and Bland-Altman](clinical/outputs/figure2_combined.png)
+![Figure 2: outcome agreement and Bland-Altman](study/outputs/figure2_combined.png)
 
 **(a)** Blinded outcome ratings, expert against app-guided, for the 30 paired
 participants. Both arms produced a clinically usable cap in the large majority
@@ -130,7 +130,7 @@ of the cap. `revision_analyses.py` reproduces the per-electrode breakdown.
 
 ## Three-arm breakdown — Supplementary Material 4
 
-![Supplementary Material 4: three-arm comparison](clinical/outputs/supplementary4_threearm.png)
+![Supplementary Material 4: three-arm comparison](study/outputs/supplementary4_threearm.png)
 
 Resolving the app arm into its two sub-conditions. **(a)** Helper-guided
 placement produced no Incorrect outcomes; both failures came from self-placement,
@@ -164,10 +164,10 @@ limitations in [`forward_model/README.md`](forward_model/README.md).
 
 ## Everything else
 
-`analyze_study.py` also writes 16 exploratory figures to `clinical/outputs/` —
+`analyze_study.py` also writes 16 exploratory figures to `study/outputs/` —
 signed-deviation distributions, per-participant heatmaps, and breakdowns by
 sex, age, hair characteristics and trial order. `revision_analyses.py` writes
-[`clinical/outputs/part2-analyses.md`](clinical/outputs/part2-analyses.md), the
+[`study/outputs/part2-analyses.md`](study/outputs/part2-analyses.md), the
 prose report covering per-electrode MAE by arm, participant characteristics
 against positioning accuracy, and both failure cases, plus the figure the
 characteristics section embeds.
@@ -176,7 +176,7 @@ characteristics section embeds.
 
 ## Verifying a reproduction
 
-`clinical/outputs/` and `forward_model/figures/` are committed, holding exactly
+`study/outputs/` and `forward_model/figures/` are committed, holding exactly
 the files the manuscript used. The scripts overwrite them in place, so
 
 ```bash
@@ -207,10 +207,10 @@ consistent error.
 
 ## Data provenance
 
-The CSVs in `clinical/data/` are generated from the study's source workbooks by
+The CSVs in `study/data/` are generated from the study's source workbooks by
 an allowlist exporter that emits only the columns the published analysis
 consumes. That exporter is published alongside its output, as
-[`clinical/data/export_public_dataset.py`](clinical/data/export_public_dataset.py),
+[`study/data/export_public_dataset.py`](study/data/export_public_dataset.py),
 so the de-identification can be read and checked rather than taken on trust. It
 refuses to run from this repository — it executes inside the study's private
 analysis package, against workbooks that are not distributed.
@@ -227,7 +227,7 @@ workbooks. One caveat is baked into the loader: `pandas.read_csv` must be given
 not correctly rounded, and the last-bit error is enough to flip a tie in the
 Wilcoxon sensitivity analysis.
 
-See [`clinical/data/DATA_DICTIONARY.md`](clinical/data/DATA_DICTIONARY.md) for
+See [`study/data/DATA_DICTIONARY.md`](study/data/DATA_DICTIONARY.md) for
 the column-by-column description.
 
 ## Ethics

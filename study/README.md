@@ -45,7 +45,7 @@ either one shows up as a disagreement rather than as a consistent error.
 used. Rerunning the scripts overwrites them in place, so
 
 ```bash
-git diff --stat clinical/outputs/
+git diff --stat study/outputs/
 ```
 
 is the reproduction check: an empty diff means byte-identical output. Figures

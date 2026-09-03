@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 EEG cap placement study: summary statistics and distribution plots.
-Reads the published CSV dataset in clinical/data/.
-Outputs plots to clinical/outputs/.
+Reads the published CSV dataset in study/data/.
+Outputs plots to study/outputs/.
 
 Column naming convention
 ------------------------
