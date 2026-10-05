@@ -139,12 +139,29 @@ where the participant cannot see the posterior electrodes while adjusting them.
 participant points. The T7/T8 gap between arms is visible at a glance; the
 frontal and occipital electrodes overlap across all three arms.
 
+## Does the conclusion depend on the 0.5 cm margin? No
+
+Non-inferiority is concluded when the upper bound of the two-sided 90 %
+confidence interval for the paired difference falls below the margin, so the
+conclusion is a function of that bound alone. The bound is **0.143 cm**
+(Δ = 0.084 cm, 90 % CI 0.024–0.143, n = 30), which means the same conclusion
+would have followed from any margin above 0.143 cm — including 0.15, 0.20 and
+0.25 cm, each roughly 2–3× stricter than the one prespecified.
+
+This is a restatement of the interval rather than a second test, and it does
+not replace the prespecified margin. It does mean the result is not an
+artefact of the margin chosen. `revision_analyses.py` prints the sensitivity
+table as section 1 of `part2-analyses.md`, and `_verify` fails the run if the
+interval moves.
+
 ## Why 0.5 cm — the forward model
 
 ![Forward-model displacement curves](forward_model/figures/forward_displacement.png)
 
-The 0.5 cm margin was justified by an assertion about volume-conduction
-smoothing rather than a demonstration. This is the demonstration: a 3-layer
+Separately from the sensitivity argument above, and offered as mechanistic
+context rather than as the basis of the conclusion: the 0.5 cm margin was
+justified by an assertion about volume-conduction smoothing rather than a
+demonstration. This is the demonstration: a 3-layer
 BEM forward solution on the `fsaverage` template head, comparing the nominal
 19-electrode 10–20 array against displaced arrays over 20 484 cortical
 dipoles.
@@ -168,9 +185,17 @@ limitations in [`forward_model/README.md`](forward_model/README.md).
 signed-deviation distributions, per-participant heatmaps, and breakdowns by
 sex, age, hair characteristics and trial order. `revision_analyses.py` writes
 [`study/outputs/part2-analyses.md`](study/outputs/part2-analyses.md), the
-prose report covering per-electrode MAE by arm, participant characteristics
-against positioning accuracy, and both failure cases, plus the figure the
+prose report covering the non-inferiority margin sensitivity, the Table 1
+participant characteristics, per-electrode MAE by arm, characteristics against
+positioning accuracy, and both failure cases, plus the figure the
 characteristics section embeds.
+
+One correction worth flagging to anyone comparing against the submitted
+manuscript: its Table 1 reported a head circumference (57.1 ± 2.1 cm). That
+measurement was never taken. The study recorded the **preauricular** and
+**nasion–inion** arcs, from which every expected electrode position is derived
+as 10 % of the relevant arc, and those are what `reference_arcs.csv` holds and
+what the regenerated Table 1 reports.
 
 ---
 
@@ -240,3 +265,17 @@ written informed consent obtained from all participants.
 
 Code is MIT, the dataset is CC-BY-4.0; see [LICENSE](LICENSE). To cite, see
 [CITATION.cff](CITATION.cff).
+
+Nothing here depends on the guidance application or on its detector, so the
+repository carries no copyleft obligation of its own. The application source
+code, the trained detector weights and the detector's training images are not
+part of this repository and are not released — the first two are proprietary
+and under a pending patent, the third consists of identifiable facial
+recordings that cannot be published under the consent obtained.
+
+### Frozen release
+
+The version accompanying the manuscript is tagged **v1.0.0** and archived with
+a permanent DOI. Cite that DOI rather than the branch: `main` continues to
+move. Zenodo metadata for the archive lives in [`.zenodo.json`](.zenodo.json);
+the DOI is recorded in [`CITATION.cff`](CITATION.cff) once minted.

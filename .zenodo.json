@@ -1,0 +1,16 @@
+{
+  "title": "AI-enabled quality assurance for point-of-care EEG cap positioning by inexperienced users \u2014 reproduction code and data",
+  "description": "De-identified participant-level measurements, condition assignments, blinded ratings and analysis code reproducing every clinical result, table and figure in the accompanying Epilepsia manuscript, together with the post hoc forward-modelling analysis reported as Supplementary Material 5.",
+  "upload_type": "software",
+  "access_right": "open",
+  "license": "MIT",
+  "creators": [
+    {"name": "Lehn-Schi\u00f8ler, William", "affiliation": "BrainCapture / Technical University of Denmark"},
+    {"name": "Sverker Nilsson, Mads", "affiliation": "Technical University of Denmark"},
+    {"name": "Armand Larsen, Sidsel", "affiliation": "Danish Epilepsy Center, Filadelfia"},
+    {"name": "Justesen, Anders Bach", "affiliation": "Danish Epilepsy Center, Filadelfia"},
+    {"name": "Skafte Detlefsen, Nicki", "affiliation": "Technical University of Denmark"},
+    {"name": "Beniczky, S\u00e1ndor", "affiliation": "Danish Epilepsy Center, Filadelfia / Aarhus University"}
+  ],
+  "keywords": ["EEG", "electrode placement", "point-of-care", "computer vision", "non-inferiority", "reproducibility"]
+}

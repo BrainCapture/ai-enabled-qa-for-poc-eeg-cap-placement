@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """Supplementary analyses accompanying the clinical paper.
 
-Three analyses, all from data already in hand:
+Five analyses, all from data already in hand:
 
-1. Per-electrode mean absolute error by arm.
-2. Participant characteristics against positioning accuracy.
-3. Description of the two incorrect placements.
+1. The primary non-inferiority result and its margin-sensitivity analysis.
+2. Participant characteristics as reported in Table 1.
+3. Per-electrode mean absolute error by arm.
+4. Participant characteristics against positioning accuracy.
+5. Description of the two incorrect placements.
 
 Parsing, the subject-exclusion rule and the electrode keys are reused from
 `analyze_study` so this cannot drift from the published analysis. `_verify`
@@ -119,6 +121,10 @@ def _verify(df: pd.DataFrame) -> None:
     diff = (pivot["App"] - pivot["Pro"]).dropna()
     checks.append(("paired difference", diff.mean(), 0.084, 0.001))
 
+    lo, hi = _paired_ci(diff, 0.90)
+    checks.append(("90% CI lower", lo, 0.024, 0.001))
+    checks.append(("90% CI upper", hi, 0.143, 0.001))
+
     counts = pd.crosstab(df["method_simple"], df["conclusion"])
     checks.append(("Expert Incorrect", counts.loc["Pro"].get("Forkert", 0), 0, 0.5))
     checks.append(("App Incorrect", counts.loc["App"].get("Forkert", 0), 2, 0.5))
@@ -133,7 +139,101 @@ def _verify(df: pd.DataFrame) -> None:
     print(f"Verified against manuscript: {len(checks)} headline values reproduce.")
 
 
-# ── Analysis 1: per-electrode error ──────────────────────────────────────────
+# ── Analysis 1: non-inferiority and margin sensitivity ───────────────────────
+
+
+def _paired_ci(diff: pd.Series, level: float) -> tuple[float, float]:
+    """Two-sided t confidence interval for the mean of a paired difference."""
+    n = len(diff)
+    half = stats.t.ppf(1 - (1 - level) / 2, n - 1) * diff.std(ddof=1) / np.sqrt(n)
+    return diff.mean() - half, diff.mean() + half
+
+
+#: Margins for the post hoc sensitivity analysis. 0.5 cm is the prespecified
+#: one; the rest are stricter values a reader might propose in its place.
+SENSITIVITY_MARGINS = (0.15, 0.20, 0.25, 0.50)
+
+
+def non_inferiority(df: pd.DataFrame) -> dict:
+    """Primary non-inferiority result, plus the post hoc margin sensitivity.
+
+    Non-inferiority is concluded when the upper bound of the two-sided 90%
+    confidence interval for the paired difference falls below the margin, so
+    the conclusion is a function of that bound alone. Reporting the margins
+    under which it would have held is therefore a restatement of the interval,
+    not a new test — but it is the form the question gets asked in.
+    """
+    pivot = df.pivot_table(index="subject_id", columns="method_simple",
+                           values="mae")
+    diff = (pivot["App"] - pivot["Pro"]).dropna()
+    lo, hi = _paired_ci(diff, 0.90)
+    return {
+        "n": len(diff),
+        "mean": diff.mean(),
+        "ci_low": lo,
+        "ci_high": hi,
+        "margins": [(m, hi < m) for m in SENSITIVITY_MARGINS],
+    }
+
+
+# ── Analysis 2: Table 1 participant characteristics ──────────────────────────
+
+#: Reference measurements taken at every trial. Head *circumference* is not
+#: among them: the expected electrode positions are derived from these two
+#: arcs (10% of each), so these are what the study actually recorded.
+ARC_COLS = {
+    "preauricular_arc": "Preauricular arc (cm)",
+    "nasion_inion_arc": "Nasion–inion arc (cm)",
+}
+
+
+def demographics(df: pd.DataFrame, meta: pd.DataFrame) -> list[tuple[str, str]]:
+    """Table 1 rows, computed over the analysed cohort.
+
+    Continuous characteristics are summarised per participant, so a subject
+    measured at both trials counts once; the two reference arcs are averaged
+    across that participant's trials first.
+    """
+    subs = sorted(df["subject_id"].unique())
+    rows: list[tuple[str, str]] = []
+
+    def cont(series: pd.Series, label: str) -> None:
+        s = series.dropna()
+        rows.append((
+            label,
+            f"{s.mean():.1f} ± {s.std(ddof=1):.1f} "
+            f"({s.min():.0f}–{s.max():.0f})",
+        ))
+
+    m = meta[meta["subject_id"].isin(subs)]
+    cont(m["age"], "Age (years), mean ± SD (range)")
+
+    arcs = base._read_csv("reference_arcs.csv")
+    arcs = arcs[arcs["subject_id"].isin(subs)]
+    per_subject = arcs.groupby("subject_id")[list(ARC_COLS)].mean()
+    for col, label in ARC_COLS.items():
+        cont(per_subject[col], f"{label}, mean ± SD (range)")
+
+    for col, label in (("sex", "Sex"), ("hair_texture_s", "Hair texture"),
+                       ("hair_density_s", "Hair density"),
+                       ("hair_length_s", "Hair length"),
+                       ("hair_styling_s", "Hair styling")):
+        if col not in m.columns:
+            continue
+        counts = m[col].value_counts()
+        # Percentages are of the participants for whom the characteristic was
+        # recorded, not of the whole cohort: hair texture and structural
+        # styling are each missing for one participant.
+        denom = int(counts.sum())
+        missing = len(subs) - denom
+        suffix = f" — not recorded for {missing}" if missing else ""
+        rows.append((f"**{label}**, n (%){suffix}", ""))
+        for value, count in counts.items():
+            rows.append((f" {value}", f"{count} ({count / denom * 100:.0f}%)"))
+    return rows
+
+
+# ── Analysis 3: per-electrode error ──────────────────────────────────────────
 
 
 def per_electrode(df: pd.DataFrame) -> pd.DataFrame:
@@ -156,7 +256,7 @@ def per_electrode(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-# ── Analysis 2: participant characteristics ──────────────────────────────────
+# ── Analysis 4: participant characteristics ──────────────────────────────────
 
 
 def _fdr(pvals: list[float]) -> list[float]:
@@ -325,7 +425,7 @@ def characteristics_figure(chars: pd.DataFrame) -> Path:
     return FIG
 
 
-# ── Analysis 3: the two incorrect placements ─────────────────────────────────
+# ── Analysis 5: the two incorrect placements ─────────────────────────────────
 
 
 def failures(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -355,8 +455,11 @@ def _fmt_p(value: float) -> str:
 
 
 def main() -> None:
-    df, _ = load()
+    df, meta = load()
     _verify(df)
+
+    noninf = non_inferiority(df)
+    demo = demographics(df, meta)
 
     elec = per_electrode(df)
     chars = characteristics(df)
@@ -368,8 +471,8 @@ def main() -> None:
     lines: list[str] = []
     add = lines.append
 
-    add("# Part 2 analyses — per-electrode errors, participant characteristics,")
-    add("# and the two incorrect placements")
+    add("# Part 2 analyses — non-inferiority margin sensitivity, participant")
+    add("# characteristics, per-electrode errors, and the two incorrect placements")
     add("")
     add("Generated by `study/revision_analyses.py`, which reuses the")
     add("parsing and subject-exclusion rules of `analyze_study.py` and verifies")
@@ -379,7 +482,54 @@ def main() -> None:
     add(f"n = {df['subject_id'].nunique()} participants, {len(df)} trials.")
     add("")
 
-    add("## 1. Per-electrode error by arm")
+    add("## 1. Non-inferiority and margin sensitivity")
+    add("")
+    add("The primary analysis. Non-inferiority is concluded when the upper")
+    add("bound of the two-sided 90% confidence interval for the paired")
+    add("difference Δ = MAE(App-guided) − MAE(Expert) falls below the")
+    add("prespecified 0.5 cm margin. The margin is on the between-condition")
+    add("difference in population mean error; it is not an acceptance")
+    add("threshold for an individual placement.")
+    add("")
+    add(f"Δ = **{noninf['mean']:.3f} cm** "
+        f"(90% CI, {noninf['ci_low']:.3f} to **{noninf['ci_high']:.3f}**; "
+        f"n = {noninf['n']}).")
+    add("")
+    add("Because the conclusion depends only on that upper bound, it would")
+    add("have been unchanged under any margin exceeding it. Post hoc:")
+    add("")
+    add("| Margin | Upper bound of 90% CI | Conclusion |")
+    add("|---|---|---|")
+    for margin, holds in noninf["margins"]:
+        pre = " (prespecified)" if margin == 0.50 else ""
+        verdict = "Non-inferior" if holds else "Not concluded"
+        add(f"| {margin:.2f} cm{pre} | {noninf['ci_high']:.3f} cm | {verdict} |")
+    add("")
+    add("This is a restatement of the confidence interval rather than a second")
+    add("test, and it does not replace the prespecified margin. It shows that")
+    add("the conclusion is not an artefact of choosing 0.5 cm: it survives a")
+    add("margin roughly 3.5-fold stricter.")
+    add("")
+
+    add("## 2. Participant characteristics (Table 1)")
+    add("")
+    add("Continuous characteristics are summarised per participant, so a")
+    add("subject measured at both trials counts once.")
+    add("")
+    add("> The study recorded the **preauricular** and **nasion–inion** arcs,")
+    add("> not head circumference: the expected electrode positions are derived")
+    add("> from 10% of each of these two arcs. Table 1 of the submitted")
+    add("> manuscript reported a head circumference, which was not among the")
+    add("> measurements taken and is not reproducible from these data; it is")
+    add("> replaced here by the two arcs that were.")
+    add("")
+    add(f"| Characteristic | n = {df['subject_id'].nunique()} |")
+    add("|---|---|")
+    for label, value in demo:
+        add(f"| {label} | {value} |")
+    add("")
+
+    add("## 3. Per-electrode error by arm")
     add("")
     add("Mean absolute error (cm) per measured position. *Signed* columns give")
     add("the mean directional deviation (measured − expected); a positive value")
@@ -432,7 +582,7 @@ def main() -> None:
         "cause and is most likely noise at this sample size.")
     add("")
 
-    add("## 2. Participant characteristics vs. positioning accuracy")
+    add("## 4. Participant characteristics vs. positioning accuracy")
     add("")
     add("Outcome is per-participant mean absolute error across all ten")
     add("positions. Exploratory: p-values are unadjusted, with")
@@ -491,7 +641,7 @@ def main() -> None:
     add("uncertain on three participants.")
     add("")
 
-    add("## 3. The two incorrect placements")
+    add("## 5. The two incorrect placements")
     add("")
     add("Signed deviation (cm) per position for each trial rated Incorrect.")
     add("")

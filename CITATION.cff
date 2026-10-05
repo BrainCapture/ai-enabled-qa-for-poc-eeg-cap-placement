@@ -27,3 +27,6 @@ repository-code: >-
   https://github.com/BrainCapture/ai-enabled-qa-for-poc-eeg-cap-placement
 license-url: https://github.com/BrainCapture/ai-enabled-qa-for-poc-eeg-cap-placement/blob/main/LICENSE
 version: 1.0.0
+date-released: 2026-10-05
+# Minted by Zenodo when the v1.0.0 release is published; fill in and re-commit.
+# doi: 10.5281/zenodo.XXXXXXX

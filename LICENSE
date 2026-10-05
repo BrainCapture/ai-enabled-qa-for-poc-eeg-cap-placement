@@ -1,7 +1,7 @@
 This repository is licensed in two parts.
 
   Code   (*.py)                 MIT         LICENSES/MIT.txt
-  Data   (clinical/data/*.csv)  CC-BY-4.0   LICENSES/CC-BY-4.0.txt
+  Data   (study/data/*.csv)     CC-BY-4.0   LICENSES/CC-BY-4.0.txt
 
 Everything here is the authors' own work and carries no copyleft dependency.
 MIT is used for the code rather than a Creative Commons licence, which Creative
