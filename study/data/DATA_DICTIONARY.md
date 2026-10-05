@@ -59,8 +59,9 @@ size covariate in the demographic analysis.
 | Column | Type | Notes |
 |---|---|---|
 | `subject_id`, `trial` | int | Join keys. |
-| `preauricular_arc` | float | Preauricular arc, 31.5–38.0 cm. |
-| `nasion_inion_arc` | float | Nasion → inion via Cz, 33.0–38.0 cm. |
+| `head_circumference` | float | 54.0–62.0 cm. **Blank for subjects 1 and 2** — the measurement was added to the protocol after they were recorded. Not used to derive expected electrode positions. |
+| `preauricular_arc` | float | Preauricular arc, 31.5–38.0 cm. Expected transverse positions (T7, T8) are 10% of this. |
+| `nasion_inion_arc` | float | Nasion → inion via Cz, 33.0–38.0 cm. Expected anteroposterior positions (Fp1, Fp2, O1, O2) are 10% of this. |
 
 ## What is not here
 

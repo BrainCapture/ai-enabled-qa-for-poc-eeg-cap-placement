@@ -190,12 +190,14 @@ participant characteristics, per-electrode MAE by arm, characteristics against
 positioning accuracy, and both failure cases, plus the figure the
 characteristics section embeds.
 
-One correction worth flagging to anyone comparing against the submitted
-manuscript: its Table 1 reported a head circumference (57.1 ± 2.1 cm). That
-measurement was never taken. The study recorded the **preauricular** and
-**nasion–inion** arcs, from which every expected electrode position is derived
-as 10 % of the relevant arc, and those are what `reference_arcs.csv` holds and
-what the regenerated Table 1 reports.
+Two notes for anyone comparing against the submitted manuscript. Its Table 1
+reports head circumference as 57.1 ± 2.1 cm (53–62); recomputed here from the
+measurement workbook it is **57.1 ± 1.8 cm (54–62)** — the mean agrees exactly,
+the spread does not, and the regenerated table uses the recomputed figures.
+And circumference was added to the protocol after the first two participants, so
+28 of the 30 have one. The preauricular and nasion–inion arcs, which are what
+the expected electrode positions are derived from (10 % of each), are complete
+and are now reported alongside it.
 
 ---
 

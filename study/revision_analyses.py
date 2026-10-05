@@ -81,7 +81,12 @@ MIN_GROUP = 3
 
 
 def _parse_reference_measures() -> pd.DataFrame:
-    """Head-size reference arcs (preauricular, nasion-inion) per subject/trial."""
+    """Head-size reference measurements per subject and trial.
+
+    Head circumference, the preauricular arc and the nasion-inion arc via Cz.
+    Circumference was added to the protocol after the first two participants
+    and is missing for those two; the arcs are complete.
+    """
     return base._read_csv("reference_arcs.csv")
 
 
@@ -178,10 +183,12 @@ def non_inferiority(df: pd.DataFrame) -> dict:
 
 # ── Analysis 2: Table 1 participant characteristics ──────────────────────────
 
-#: Reference measurements taken at every trial. Head *circumference* is not
-#: among them: the expected electrode positions are derived from these two
-#: arcs (10% of each), so these are what the study actually recorded.
-ARC_COLS = {
+#: Reference measurements taken at every trial, in Table 1 order. The expected
+#: electrode positions are computed from 10% of the preauricular arc
+#: (transverse) and 10% of the nasion-inion arc (anteroposterior); circumference
+#: is recorded alongside them but does not enter that computation.
+REFERENCE_ROWS = {
+    "head_circumference": "Head circumference (cm)",
     "preauricular_arc": "Preauricular arc (cm)",
     "nasion_inion_arc": "Nasion–inion arc (cm)",
 }
@@ -208,11 +215,13 @@ def demographics(df: pd.DataFrame, meta: pd.DataFrame) -> list[tuple[str, str]]:
     m = meta[meta["subject_id"].isin(subs)]
     cont(m["age"], "Age (years), mean ± SD (range)")
 
-    arcs = base._read_csv("reference_arcs.csv")
-    arcs = arcs[arcs["subject_id"].isin(subs)]
-    per_subject = arcs.groupby("subject_id")[list(ARC_COLS)].mean()
-    for col, label in ARC_COLS.items():
-        cont(per_subject[col], f"{label}, mean ± SD (range)")
+    refs = base._read_csv("reference_arcs.csv")
+    refs = refs[refs["subject_id"].isin(subs)]
+    per_subject = refs.groupby("subject_id")[list(REFERENCE_ROWS)].mean()
+    for col, label in REFERENCE_ROWS.items():
+        recorded = per_subject[col].notna().sum()
+        note = "" if recorded == len(subs) else f" — not recorded for {len(subs) - recorded}"
+        cont(per_subject[col], f"{label}, mean ± SD (range){note}")
 
     for col, label in (("sex", "Sex"), ("hair_texture_s", "Hair texture"),
                        ("hair_density_s", "Hair density"),
@@ -516,12 +525,12 @@ def main() -> None:
     add("Continuous characteristics are summarised per participant, so a")
     add("subject measured at both trials counts once.")
     add("")
-    add("> The study recorded the **preauricular** and **nasion–inion** arcs,")
-    add("> not head circumference: the expected electrode positions are derived")
-    add("> from 10% of each of these two arcs. Table 1 of the submitted")
-    add("> manuscript reported a head circumference, which was not among the")
-    add("> measurements taken and is not reproducible from these data; it is")
-    add("> replaced here by the two arcs that were.")
+    add("> Head circumference was added to the protocol after the first two")
+    add("> participants, so it is missing for those two and the row is")
+    add("> computed over the rest. The two reference arcs are complete, and")
+    add("> are what the expected electrode positions are computed from: 10%")
+    add("> of the preauricular arc transversely, 10% of the nasion–inion arc")
+    add("> anteroposteriorly.")
     add("")
     add(f"| Characteristic | n = {df['subject_id'].nunique()} |")
     add("|---|---|")

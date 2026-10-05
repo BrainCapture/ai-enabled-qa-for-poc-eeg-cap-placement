@@ -39,16 +39,17 @@ margin roughly 3.5-fold stricter.
 Continuous characteristics are summarised per participant, so a
 subject measured at both trials counts once.
 
-> The study recorded the **preauricular** and **nasion–inion** arcs,
-> not head circumference: the expected electrode positions are derived
-> from 10% of each of these two arcs. Table 1 of the submitted
-> manuscript reported a head circumference, which was not among the
-> measurements taken and is not reproducible from these data; it is
-> replaced here by the two arcs that were.
+> Head circumference was added to the protocol after the first two
+> participants, so it is missing for those two and the row is
+> computed over the rest. The two reference arcs are complete, and
+> are what the expected electrode positions are computed from: 10%
+> of the preauricular arc transversely, 10% of the nasion–inion arc
+> anteroposteriorly.
 
 | Characteristic | n = 30 |
 |---|---|
 | Age (years), mean ± SD (range) | 34.9 ± 15.0 (19–71) |
+| Head circumference (cm), mean ± SD (range) — not recorded for 2 | 57.1 ± 1.8 (54–62) |
 | Preauricular arc (cm), mean ± SD (range) | 34.7 ± 1.7 (32–38) |
 | Nasion–inion arc (cm), mean ± SD (range) | 35.8 ± 1.2 (33–38) |
 | **Sex**, n (%) |  |
