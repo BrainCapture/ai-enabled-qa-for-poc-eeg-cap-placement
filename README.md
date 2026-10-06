@@ -154,30 +154,57 @@ artefact of the margin chosen. `revision_analyses.py` prints the sensitivity
 table as section 1 of `part2-analyses.md`, and `_verify` fails the run if the
 interval moves.
 
-## Why 0.5 cm — the forward model
+### What the margin is not
+
+The margin is on the **between-condition difference in population mean** MAE.
+It is not an acceptance threshold for an individual placement, and arithmetic
+of the form *expert mean + margin = worst acceptable placement* does not
+follow from the test.
+
+Two properties of the metric are worth stating plainly, because both are easy
+to get wrong when reading these numbers:
+
+- **MAE is not a Euclidean displacement.** It averages **ten one-dimensional
+  coordinate deviations** across six electrodes — T7 and T8 contribute one
+  axis each, Fp1/Fp2/O1/O2 two each (see `ABS_COLS`). The same value can arise
+  from small distributed deviations or from one large focal deviation, and for
+  a two-axis electrode mean(|ap|, |lat|) ≤ √(ap² + lat²), so MAE systematically
+  *understates* physical displacement.
+- **MAE does not order placements by clinical acceptability.** In this study
+  the blinded ratings overlap almost completely — Optimal 0.46–1.31 cm, Usable
+  0.65–1.38 cm, Incorrect 1.29–1.76 cm. One App-guided placement at **1.29 cm
+  was rated incorrect** (its deviations were spatially concentrated) while
+  another at **1.31 cm was rated optimal**, and an **expert** placement at
+  **1.38 cm** was rated usable.
+
+## Forward model — exploratory, not reported in the paper
 
 ![Forward-model displacement curves](forward_model/figures/forward_displacement.png)
 
-Separately from the sensitivity argument above, and offered as mechanistic
-context rather than as the basis of the conclusion: the 0.5 cm margin was
-justified by an assertion about volume-conduction smoothing rather than a
-demonstration. This is the demonstration: a 3-layer
-BEM forward solution on the `fsaverage` template head, comparing the nominal
-19-electrode 10–20 array against displaced arrays over 20 484 cortical
-dipoles.
+`forward_model/` contains a 3-layer BEM forward solution on the `fsaverage`
+template head, comparing the nominal 19-electrode 10–20 array against displaced
+arrays over 20 484 cortical dipoles. It was built to give mechanistic content
+to the volume-conduction argument behind the 0.5 cm margin.
 
-The margin is prespecified on the paired difference in mean absolute
-positioning error, so the least accurate placement it would still accept is
-the Expert's own error (0.855 cm) plus the margin — 1.355 cm. At that
-placement, a whole-cap shift changes scalp potential by 20.2 % of peak
-amplitude, moves the interhemispheric asymmetry index by 5.9 percentage points
-(against the ~33 pp corresponding to a clinically called 2:1 asymmetry), and
-displaces a fitted dipole by 10.6 mm. The App-guided error actually observed
-(0.938 cm) sits far inside that span.
+**It is retained here as exploratory work and is deliberately not used to
+justify the margin.** The reason is the mismatch described above: the model
+perturbs the array by a *uniform rigid displacement* and reports mean Euclidean
+electrode movement, whereas the study's MAE is a mean of ten scalar coordinate
+deviations over six electrodes. Mapping one onto the other would require
+assumptions the data do not supply, and a single MAE value corresponds to many
+different spatial patterns with different signal consequences. Reading the
+curves as though a given MAE implied a given physical shift would therefore
+overstate what the model can support.
 
-The study bounds the *signal-level* consequence of a displacement on template
-anatomy. It does not establish clinical-decision equivalence — see the
-limitations in [`forward_model/README.md`](forward_model/README.md).
+What the model does show, on its own terms, is a dose–response: scalp
+potential, interhemispheric asymmetry and dipole-fit localisation error all
+vary linearly with array displacement over 0.18–1.46 cm (R² = 1.00), and an
+isolated single-electrode displacement perturbs the signal far less than a
+whole-cap shift of the same magnitude. That is a statement about the template
+head model, not about clinical interpretation, and not about this cohort.
+
+See [`forward_model/README.md`](forward_model/README.md) for the method, the
+caching design and the full limitations.
 
 ## Everything else
 

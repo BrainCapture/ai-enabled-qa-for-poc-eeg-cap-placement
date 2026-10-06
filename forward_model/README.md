@@ -1,13 +1,34 @@
 # Forward-model study: how much does a displaced electrode change the EEG?
 
-Supports the **0.5 cm non-inferiority margin** in the clinical paper, which was
-justified by an assertion about volume-conduction smoothing rather than a
-demonstration; this module supplies the demonstration.
+> ### ⚠️ Exploratory — not reported in the clinical paper
+>
+> This module was built to give mechanistic content to the volume-conduction
+> argument behind the **0.5 cm non-inferiority margin**. It is **not** used for
+> that purpose and does not appear in the paper or its supplements.
+>
+> **Why it was withdrawn.** The model perturbs the electrode array by a uniform
+> rigid displacement and reports mean Euclidean electrode movement. The study's
+> mean absolute error is a different quantity: the mean of **ten
+> one-dimensional coordinate deviations** across six electrodes (T7/T8 one axis
+> each, Fp1/Fp2/O1/O2 two each). A single MAE value is consistent with many
+> different spatial patterns — small distributed deviations, or one large focal
+> one — and these do not have the same signal consequences. Treating an MAE of
+> 0.855 or 1.355 cm as a uniform physical displacement requires assumptions the
+> measurements do not supply.
+>
+> The study's own data make the point: a placement at 1.29 cm MAE was rated
+> clinically incorrect while one at 1.31 cm was rated optimal, because the
+> deviations were distributed differently.
+>
+> The margin's robustness is instead established by the margin-sensitivity
+> analysis in `study/revision_analyses.py` (section 1), which uses only the
+> trial measurements. Nothing below should be read as a clinical threshold, a
+> per-placement safety bound, or a validation of the margin.
 
-## The question
+## The question it was built to answer
 
 If an EEG electrode sits 0.5 cm away from where the 10–20 system says it should,
-how much does the recorded signal actually change?
+how much does the recorded signal change *in this template head model*?
 
 ## Approach
 
@@ -24,9 +45,11 @@ Two perturbation modes:
 | **Whole-cap shift** | The dominant real-world error. Because inter-electrode geometry inside a cap is fixed, a misplaced cap is a *rigid rotation* about the head centre, not independent per-electrode jitter. Electrodes near the rotation axis (T7/T8 for an anteroposterior slip) move less — which is physically correct. |
 | **Single electrode** | One electrode displaced in 8 tangential directions, comparable to Wang & Gotman (2001). |
 
-Displacements sweep 0.25–2.0 cm and include **0.855 cm** and **0.938 cm** — the
-Expert and App-guided mean absolute errors measured in the clinical study — so
-the margin can be read against the study's own empirical baseline.
+Displacements sweep 0.25–2.0 cm. The sweep includes 0.855 cm and 0.938 cm, the
+Expert and App-guided mean absolute errors measured in the clinical study,
+because those magnitudes were of interest when the module was written — but see
+the note above: MAE and array displacement are not the same quantity, and the
+curves should not be read at those abscissae as though they were.
 
 ## Metrics
 
@@ -34,8 +57,11 @@ the margin can be read against the study's own empirical baseline.
   peak scalp amplitude.
 - **Topography** — RDM (shape) and ln-magnitude, standard forward-comparison measures.
 - **Interhemispheric asymmetry** — change in the left/right asymmetry index at
-  homologous pairs, read against the ~33 pp that corresponds to a clinically
-  called 2:1 asymmetry.
+  homologous pairs. (For scale, a 2:1 interhemispheric ratio corresponds to
+  ~33 pp on this index. That is a reference point for the magnitude of the
+  index, not a safety threshold: a change below it does not imply that a
+  displacement is clinically harmless, since it says nothing about spike-field
+  morphology, phase reversal or local topography.)
 - **Source localisation** — continuous dipole fit: data generated through the
   *displaced* array, then localised assuming the array is where it should be.
 
@@ -43,13 +69,21 @@ the margin can be read against the study's own empirical baseline.
 
 ![Forward-model displacement curves](figures/forward_displacement.png)
 
-Every metric is linear in displacement over the range that matters (R² = 1.00),
-so the margin can be read straight off the curves. The dashed lines mark the
-Expert error measured in this study (0.855 cm) and the least accurate
-placement the margin would still accept (0.855 + 0.5 = 1.355 cm); the diamond
-is the App-guided error actually observed (0.938 cm). This is Supplementary
-Material 5 of the paper; run `python3 report.py` to reprint the headline
-numbers behind the figure.
+Every metric is linear in array displacement over the range studied
+(R² = 1.00), and an isolated single-electrode displacement perturbs the signal
+far less than a whole-cap shift of the same magnitude — at 1 cm, 2.1 % of peak
+amplitude against 15.0 %.
+
+The abscissa is **mean Euclidean electrode displacement in the model**, not the
+study's MAE. An earlier version of this figure marked the study's Expert
+(0.855 cm) and App-guided (0.938 cm) errors on that axis and shaded a band to
+0.855 + 0.5 = 1.355 cm labelled "worst placement the margin would accept".
+Those annotations are the reason this module was withdrawn, and they have been
+removed; `report.py` now reports at round displacement magnitudes instead. The
+dotted line in panel B is a scale reference for the asymmetry index, not a
+safety threshold.
+
+Run `python3 report.py` to regenerate the figure and reprint the numbers.
 
 ## Files
 
@@ -105,11 +139,16 @@ automatically to `~/mne_data/` on first run. No MRI, FreeSurfer or GPU needed.
   nothing to the scalp, so relative error there is division by near-zero. Metrics
   keep the upper 50% of sources by scalp-projection strength.
 
-## Limitations (must be stated in the paper)
+## Limitations
 
 Template anatomy, so no inter-individual variability in skull thickness or
-conductivity; noise-free; dipolar sources; a fixed 19-electrode array. The study
-bounds the *signal-level* consequence of a displacement. It does not establish
-clinical-decision equivalence, and should be presented as supporting the
-plausibility of the margin rather than proving that 0.5 cm is clinically
-irrelevant.
+conductivity; noise-free; dipolar sources; a fixed 19-electrode array; and a
+uniform rigid perturbation that does not correspond to the measurement
+structure of the clinical study (see the note at the top).
+
+The module bounds the *signal-level* consequence of a displacement **in this
+model**. It does not establish clinical-decision equivalence, does not define a
+per-placement tolerance, and its findings should not be generalized to EEG
+source imaging or quantitative topographic analysis — where, as Wang & Gotman
+(2001) and Dalal et al. (2014) document, electrode-coordinate error propagates
+materially into source reconstruction.
