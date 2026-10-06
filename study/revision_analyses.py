@@ -40,6 +40,11 @@ import analyze_study as base  # noqa: E402
 
 OUT = Path(__file__).parent / "outputs" / "part2-analyses.md"
 FIG = Path(__file__).parent / "outputs" / "19_characteristics_vs_error.png"
+FIG_ELEC = Path(__file__).parent / "outputs" / "20_per_electrode_supplement.png"
+
+#: Manuscript names for the two arms. `analyze_study` uses the internal
+#: shorthand (Pro/App) throughout; anything bound for the paper must not.
+ARM_LABEL = {"Pro": "Expert", "App": "App-guided"}
 
 #: Rows of the figure, in order, keyed by `Characteristic` in the results
 #: table. Only the two a priori hypotheses — head size and hair — are drawn.
@@ -69,6 +74,9 @@ CATEGORICAL = {
 }
 CONTINUOUS = {
     "age": "Age (years)",
+    # Circumference is missing for the two participants recorded before the
+    # measurement entered the protocol, so it has n = 28 where the arcs have 30.
+    "head_circumference": "Head circumference (cm)",
     "preauricular_arc": "Preauricular arc (cm)",
     "nasion_inion_arc": "Nasion–inion arc (cm)",
 }
@@ -265,6 +273,37 @@ def per_electrode(df: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+def per_electrode_figure(df: pd.DataFrame) -> Path:
+    """Supplementary figure for the per-electrode analysis.
+
+    `analyze_study.plot_pro_vs_app_electrode` draws the same comparison for
+    exploratory use and labels the arms Pro/App. This is the publication
+    version: manuscript arm names, no internal shorthand.
+    """
+    long = base._build_long_by_method(df, "method_simple")
+    long = long.assign(Arm=long["method_simple"].map(ARM_LABEL))
+    order = [ARM_LABEL[m] for m in base.METHOD_SIMPLE_ORDER]
+    palette = {ARM_LABEL[m]: c for m, c in base.METHOD_SIMPLE_PAL.items()}
+
+    fig, axes = plt.subplots(1, 2, figsize=(16, 5))
+    for ax, ycol, title in (
+        (axes[0], "|Error| (cm)", "Absolute positioning error"),
+        (axes[1], "Deviation (%)", "Signed deviation"),
+    ):
+        sns.boxplot(data=long, x="Electrode", y=ycol, hue="Arm", hue_order=order,
+                    order=base.LABEL_ORDER, ax=ax, linewidth=1.1, palette=palette,
+                    flierprops=dict(marker="o", markersize=3, alpha=0.5))
+        ax.axhline(0, color="gray", lw=0.8, ls="--", alpha=0.6)
+        ax.set_title(title, fontsize=12)
+        ax.set_xlabel("")
+        ax.legend(title="", loc="upper right")
+        ax.tick_params(axis="x", rotation=20)
+    plt.tight_layout()
+    plt.savefig(FIG_ELEC, dpi=200)
+    plt.close()
+    return FIG_ELEC
+
+
 # ── Analysis 4: participant characteristics ──────────────────────────────────
 
 
@@ -450,7 +489,7 @@ def failures(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     })
     cols = ["subject_id", "method", "mae", "age", "sex",
             "hair_texture_s", "hair_density_s", "hair_length_s",
-            "preauricular_arc", "nasion_inion_arc"]
+            "head_circumference", "preauricular_arc", "nasion_inion_arc"]
     return profile, bad[cols].reset_index(drop=True)
 
 
@@ -474,6 +513,7 @@ def main() -> None:
     chars = characteristics(df)
     profile, failure_meta = failures(df)
     figure = characteristics_figure(chars)
+    figure_elec = per_electrode_figure(df)
 
     cohort_mae = df.groupby("method_simple")["mae"].agg(["mean", "std"])
 
@@ -540,6 +580,8 @@ def main() -> None:
 
     add("## 3. Per-electrode error by arm")
     add("")
+    add(f"![Per-electrode deviation by arm]({figure_elec.name})")
+    add("")
     add("Mean absolute error (cm) per measured position. *Signed* columns give")
     add("the mean directional deviation (measured − expected); a positive value")
     add("means placement too far from the reference landmark. The Wilcoxon test")
@@ -595,10 +637,11 @@ def main() -> None:
     add("")
     add("Outcome is per-participant mean absolute error across all ten")
     add("positions. Exploratory: p-values are unadjusted, with")
-    add("Benjamini–Hochberg values alongside. Head circumference was not")
-    add("recorded in the study database, so the preauricular and nasion–inion")
-    add("arcs — the measurements from which expected electrode positions were")
-    add("derived — are used as head-size covariates.")
+    add("Benjamini–Hochberg values alongside. Three head-size covariates are")
+    add("tested: head circumference, and the preauricular and nasion–inion arcs")
+    add("from which the expected electrode positions are derived. Circumference")
+    add("entered the protocol after the first two participants, so it has")
+    add("n = 28 where the arcs have 30.")
     add("")
     header = ["Arm", "Characteristic", "Test", "n", "Effect", "p", "p (FDR)"]
     add("| " + " | ".join(header) + " |")
@@ -631,9 +674,13 @@ def main() -> None:
     add("- *Head size.* Positioning error rises with preauricular arc under")
     add("  App-guided placement (rho = +0.43, p = 0.017) but not under Expert")
     add("  placement (rho = +0.24, p = 0.21). This is the expected direction for")
-    add("  the head-size hypothesis, and it is the one signal pointing that way, but it")
-    add("  does not survive correction (FDR p = 0.25) and the arm difference is")
-    add("  itself untested.")
+    add("  the head-size hypothesis, but it does not survive correction")
+    add("  (FDR p = 0.25), the arm difference is itself untested, and the other")
+    add("  two head-size measures do not corroborate it: the nasion\u2013inion arc is")
+    add("  null in both arms, and head circumference runs weakly in the")
+    add("  *opposite* direction (App-guided rho = -0.13, Expert rho = -0.08).")
+    add("  A head-size effect that appears in one of three correlated measures")
+    add("  of head size is not a finding.")
     add("- *Hair texture.* Curly/coily hair was associated with **lower** error")
     add("  (0.75 vs 0.96 cm, p = 0.032) — the opposite of the expected")
     add("  direction. This rests on three participants and should not be")

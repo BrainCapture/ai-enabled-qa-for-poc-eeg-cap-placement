@@ -70,6 +70,8 @@ subject measured at both trials counts once.
 
 ## 3. Per-electrode error by arm
 
+![Per-electrode deviation by arm](20_per_electrode_supplement.png)
+
 Mean absolute error (cm) per measured position. *Signed* columns give
 the mean directional deviation (measured − expected); a positive value
 means placement too far from the reference landmark. The Wilcoxon test
@@ -99,30 +101,33 @@ Two qualifications the manuscript should carry. First, although the temporal bia
 
 Outcome is per-participant mean absolute error across all ten
 positions. Exploratory: p-values are unadjusted, with
-Benjamini–Hochberg values alongside. Head circumference was not
-recorded in the study database, so the preauricular and nasion–inion
-arcs — the measurements from which expected electrode positions were
-derived — are used as head-size covariates.
+Benjamini–Hochberg values alongside. Three head-size covariates are
+tested: head circumference, and the preauricular and nasion–inion arcs
+from which the expected electrode positions are derived. Circumference
+entered the protocol after the first two participants, so it has
+n = 28 where the arcs have 30.
 
 | Arm | Characteristic | Test | n | Effect | p | p (FDR) |
 |---|---|---|---|---|---|---|
-| Expert | Age (years) | Spearman | 30 | rho = -0.20 | 0.283 | 0.838 |
-| Expert | Preauricular arc (cm) | Spearman | 30 | rho = +0.24 | 0.208 | 0.838 |
+| Expert | Age (years) | Spearman | 30 | rho = -0.20 | 0.283 | 0.833 |
+| Expert | Head circumference (cm) | Spearman | 28 | rho = -0.08 | 0.699 | 0.833 |
+| Expert | Preauricular arc (cm) | Spearman | 30 | rho = +0.24 | 0.208 | 0.833 |
 | Expert | Nasion–inion arc (cm) | Spearman | 30 | rho = +0.03 | 0.863 | 0.875 |
-| Expert | Sex | Mann–Whitney | 30 | Female 0.88 vs Male 0.81 cm | 0.628 | 0.838 |
-| Expert | Hair texture | Mann–Whitney | 29 | Curly/Coily 0.82 vs Straight/Wavy 0.86 cm | 0.591 | 0.838 |
-| Expert | Hair density | Mann–Whitney | 30 | High Density 0.90 vs Thin/Average 0.83 cm | 0.385 | 0.838 |
-| Expert | Strand diameter | Mann–Whitney | 29 | Coarse 0.89 vs Fine/Medium 0.84 cm | 0.345 | 0.838 |
-| Expert | Hair length | Mann–Whitney | 30 | Medium/Long 0.89 vs Short/Shaved 0.81 cm | 0.490 | 0.838 |
+| Expert | Sex | Mann–Whitney | 30 | Female 0.88 vs Male 0.81 cm | 0.628 | 0.833 |
+| Expert | Hair texture | Mann–Whitney | 29 | Curly/Coily 0.82 vs Straight/Wavy 0.86 cm | 0.591 | 0.833 |
+| Expert | Hair density | Mann–Whitney | 30 | High Density 0.90 vs Thin/Average 0.83 cm | 0.385 | 0.833 |
+| Expert | Strand diameter | Mann–Whitney | 29 | Coarse 0.89 vs Fine/Medium 0.84 cm | 0.345 | 0.833 |
+| Expert | Hair length | Mann–Whitney | 30 | Medium/Long 0.89 vs Short/Shaved 0.81 cm | 0.490 | 0.833 |
 | Expert | Structural styling | not tested | 29 | group too small (min n = 1) | — | — |
-| App-guided | Age (years) | Spearman | 30 | rho = -0.06 | 0.740 | 0.846 |
-| App-guided | Preauricular arc (cm) | Spearman | 30 | rho = +0.43 | 0.017 | 0.253 |
-| App-guided | Nasion–inion arc (cm) | Spearman | 30 | rho = +0.15 | 0.428 | 0.838 |
-| App-guided | Sex | Mann–Whitney | 30 | Female 0.93 vs Male 0.96 cm | 0.538 | 0.838 |
-| App-guided | Hair texture | Mann–Whitney | 29 | Curly/Coily 0.75 vs Straight/Wavy 0.96 cm | 0.032 | 0.253 |
-| App-guided | Hair density | Mann–Whitney | 30 | High Density 0.90 vs Thin/Average 0.96 cm | 0.433 | 0.838 |
+| App-guided | Age (years) | Spearman | 30 | rho = -0.06 | 0.740 | 0.833 |
+| App-guided | Head circumference (cm) | Spearman | 27 | rho = -0.13 | 0.519 | 0.833 |
+| App-guided | Preauricular arc (cm) | Spearman | 30 | rho = +0.43 | 0.017 | 0.285 |
+| App-guided | Nasion–inion arc (cm) | Spearman | 30 | rho = +0.15 | 0.428 | 0.833 |
+| App-guided | Sex | Mann–Whitney | 30 | Female 0.93 vs Male 0.96 cm | 0.538 | 0.833 |
+| App-guided | Hair texture | Mann–Whitney | 29 | Curly/Coily 0.75 vs Straight/Wavy 0.96 cm | 0.032 | 0.285 |
+| App-guided | Hair density | Mann–Whitney | 30 | High Density 0.90 vs Thin/Average 0.96 cm | 0.433 | 0.833 |
 | App-guided | Strand diameter | Mann–Whitney | 29 | Coarse 0.93 vs Fine/Medium 0.96 cm | 0.875 | 0.875 |
-| App-guided | Hair length | Mann–Whitney | 30 | Medium/Long 0.96 vs Short/Shaved 0.91 cm | 0.738 | 0.846 |
+| App-guided | Hair length | Mann–Whitney | 30 | Medium/Long 0.96 vs Short/Shaved 0.91 cm | 0.738 | 0.833 |
 | App-guided | Structural styling | not tested | 29 | group too small (min n = 1) | — | — |
 
 ![Participant characteristics vs. positioning error](19_characteristics_vs_error.png)
@@ -145,9 +150,13 @@ suppressing:
 - *Head size.* Positioning error rises with preauricular arc under
   App-guided placement (rho = +0.43, p = 0.017) but not under Expert
   placement (rho = +0.24, p = 0.21). This is the expected direction for
-  the head-size hypothesis, and it is the one signal pointing that way, but it
-  does not survive correction (FDR p = 0.25) and the arm difference is
-  itself untested.
+  the head-size hypothesis, but it does not survive correction
+  (FDR p = 0.25), the arm difference is itself untested, and the other
+  two head-size measures do not corroborate it: the nasion–inion arc is
+  null in both arms, and head circumference runs weakly in the
+  *opposite* direction (App-guided rho = -0.13, Expert rho = -0.08).
+  A head-size effect that appears in one of three correlated measures
+  of head size is not a finding.
 - *Hair texture.* Curly/coily hair was associated with **lower** error
   (0.75 vs 0.96 cm, p = 0.032) — the opposite of the expected
   direction. This rests on three participants and should not be
@@ -183,9 +192,9 @@ Signed deviation (cm) per position for each trial rated Incorrect.
 Characteristics of the two participants:
 
 ```
- subject_id     method  mae  age    sex hair_texture_s hair_density_s hair_length_s  preauricular_arc  nasion_inion_arc
-          1 Self + App 1.29   20   Male  Straight/Wavy   High Density  Short/Shaved              38.0              37.0
-         19 Self + App 1.76   30 Female  Straight/Wavy   Thin/Average   Medium/Long              37.0              36.0
+ subject_id     method  mae  age    sex hair_texture_s hair_density_s hair_length_s  head_circumference  preauricular_arc  nasion_inion_arc
+          1 Self + App 1.29   20   Male  Straight/Wavy   High Density  Short/Shaved                 NaN              38.0              37.0
+         19 Self + App 1.76   30 Female  Straight/Wavy   Thin/Average   Medium/Long                57.0              37.0              36.0
 ```
 
 **Both failures occurred in the self-guided sub-condition** (2 of 19,
