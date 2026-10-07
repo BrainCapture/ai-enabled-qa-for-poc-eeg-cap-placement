@@ -27,8 +27,8 @@ tracks the user's facial landmarks together with the cap's five front-facing
 electrodes, and reports for each one whether it sits where the 10–20 system
 puts it: **(a)** during adjustment, with Fp1 and Fp2 flagged too high, and
 **(b)** the same cap once every position is in range. This is Figure 1 of the
-paper, a composite of screen captures — the one image here that the published
-data does not regenerate.
+paper, a composite of screen captures — the one image here that no script in
+this repository regenerates.
 
 ## What is here
 
@@ -89,6 +89,13 @@ offset (blue, ①–③): the temporal pair on their distance from the preauricu
 point, and each frontopolar and occipital electrode on both a vertical and a
 horizontal offset. Ten signed deviations per placement, in centimetres,
 measured minus the position the 10–20 system prescribes.
+
+Supplementary Material 2 of the paper, drawn by
+[`figures/generate_measurement_schematic.py`](figures/generate_measurement_schematic.py).
+It renders the protocol rather than the data, so it takes no inputs. The
+committed PNG is the file submitted to the journal; re-running the script
+reproduces it pixel for pixel but not byte for byte, since the PNG stream
+depends on the matplotlib and font versions in use.
 
 What it prescribes depends on the head, so four reference measurements (grey,
 ④–⑦) set each participant's own targets. Two of them, the transverse arc and
