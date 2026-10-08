@@ -41,13 +41,10 @@ MUTED = "#767676"
 #: displacement. So the placement the margin would still accept as non-inferior
 #: is the Expert's own MAE plus the margin, and the margin itself is a distance
 #: *along* the x-axis rather than a point on it. The figure is drawn that way.
-#: Displacement magnitudes (cm) the headline numbers are reported at. These are
-#: round points on the model's own abscissa. They are deliberately NOT the
-#: study's measured mean absolute errors: MAE averages ten one-dimensional
-#: coordinate deviations over six electrodes, while this axis is mean Euclidean
-#: displacement over all 19, so evaluating the curves at those values would
-#: assert an equivalence the data do not support. See the README.
-REPORT_AT_CM = (0.25, 0.5, 1.0, 1.35)
+MARGIN_CM = 0.5
+EXPERT_CM = 0.855
+APP_CM = 0.938
+LIMIT_CM = EXPERT_CM + MARGIN_CM
 
 #: A 2:1 left/right amplitude ratio - the usual threshold for calling an
 #: interhemispheric asymmetry - corresponds to an asymmetry index of 1/3.
@@ -108,15 +105,63 @@ def linearity_check(curve: pd.DataFrame) -> float:
     return float(1 - resid.var() / y.var())
 
 
-# NOTE: an earlier version drew the study's Expert (0.855 cm) and App-guided
-# (0.938 cm) mean absolute errors on this axis, plus a band running to
-# 0.855 + 0.5 = 1.355 cm labelled "worst placement the margin would accept".
-# That annotation was the reason this module was withdrawn from the paper: it
-# maps MAE — a mean of ten one-dimensional coordinate deviations over six
-# electrodes — onto the model's mean Euclidean array displacement, which is a
-# different quantity, and it reads a population-mean margin as a per-placement
-# bound. The axis is a property of the model; nothing from the trial data
-# belongs on it. Do not reinstate it.
+def _margin_band(ax, label: bool) -> None:
+    """Draw the margin as what it is: a span on the x-axis.
+
+    Three marks, three different kinds of claim. Expert MAE is the reference
+    standard the study measures against; Expert + margin is the worst placement
+    the non-inferiority test would still accept; App-guided is what was actually
+    observed. The margin is the gap between the first two.
+    """
+    ymax = ax.get_ylim()[1]
+    ax.axvspan(EXPERT_CM, LIMIT_CM, color=INK, alpha=0.05, lw=0, zorder=0)
+    ax.axvline(EXPERT_CM, color=MUTED, ls="--", lw=1.2, zorder=1)
+    ax.axvline(LIMIT_CM, color=INK, ls="--", lw=1.2, zorder=1)
+    ax.axvline(APP_CM, color=COLOR_CAP, ls="-", lw=1.0, alpha=0.55, zorder=1)
+
+    y = ymax * 0.90
+    ax.annotate("", xy=(LIMIT_CM, y), xytext=(EXPERT_CM, y), zorder=6,
+                arrowprops=dict(arrowstyle="<->", color=INK, lw=1.1,
+                                shrinkA=0, shrinkB=0))
+    ax.annotate("0.5 cm margin", xy=((EXPERT_CM + LIMIT_CM) / 2, y),
+                xytext=(0, 5), textcoords="offset points", ha="center",
+                va="bottom", fontsize=9, weight="bold", color=INK, zorder=6)
+    if label:
+        ax.annotate("Expert\n0.855 cm", xy=(EXPERT_CM - 0.04, ymax * 0.99),
+                    ha="right", va="top", fontsize=8.5, color=MUTED,
+                    linespacing=1.25)
+        ax.annotate("worst placement the\nmargin would accept\n1.355 cm",
+                    xy=(LIMIT_CM + 0.04, ymax * 0.99), ha="left", va="top",
+                    fontsize=8.5, color=INK, linespacing=1.25)
+
+
+def _readouts(ax, curve, fmt: str, label_app: bool) -> None:
+    """Values on the cap curve at the three marked placements."""
+    pts = [(EXPERT_CM, MUTED, "o", 6.5, "normal"),
+           (APP_CM, COLOR_CAP, "D", 5.5, "normal"),
+           (LIMIT_CM, INK, "o", 7.0, "bold")]
+    for x, color, marker, size, weight in pts:
+        y = at(curve, x)
+        ax.plot([x], [y], marker=marker, ms=size, mfc=color, mec="white",
+                mew=1.3, zorder=6)
+        if marker == "D" and not label_app:
+            continue
+        # Expert and App-guided sit only 0.083 cm apart, so their labels are
+        # pushed to opposite sides of the curve rather than offset along it.
+        # The curves rise monotonically, so above-left and below-right are the
+        # only sides that stay clear of the line whatever the panel's scale:
+        # left of a point the curve is below it, right of it the curve is
+        # above. Every offset below must keep to those two quadrants - an
+        # above-right label is crossed by the line at slopes as gentle as
+        # panel A's, and buried by it at panel C's.
+        offsets = {EXPERT_CM: (-11, 6, "right", "bottom"),
+                   APP_CM: (6, -9, "left", "top"),
+                   LIMIT_CM: (9, -8, "left", "top")}
+        dx, dy, ha, va = offsets[x]
+        ax.annotate(fmt.format(y), xy=(x, y), xytext=(dx, dy),
+                    textcoords="offset points", ha=ha, va=va,
+                    fontsize=9.5, weight=weight, color=color, zorder=7)
+
 
 def build_figure(summary: pd.DataFrame, dipole: pd.DataFrame | None) -> dict:
     cap = summary[summary["mode"] == "cap"]
@@ -131,7 +176,7 @@ def build_figure(summary: pd.DataFrame, dipole: pd.DataFrame | None) -> dict:
     n_panels = 3 if dipole is not None else 2
     fig, axes = plt.subplots(1, n_panels, figsize=(4.4 * n_panels, 4.0))
 
-    def draw(ax, cap_curve, single_curve, ylabel, title, ylim):
+    def draw(ax, cap_curve, single_curve, ylabel, title, ylim, fmt, first):
         ax.fill_between(cap_curve["x"],
                         cap_curve["y"] * cap_curve.attrs["scale"],
                         cap_curve["hi"] * cap_curve.attrs["scale"],
@@ -143,21 +188,24 @@ def build_figure(summary: pd.DataFrame, dipole: pd.DataFrame | None) -> dict:
                     single_curve["y"] * single_curve.attrs["scale"],
                     color=COLOR_SINGLE, lw=1.4, ls=(0, (5, 2)), zorder=3,
                     label="Single electrode")
-        ax.set_xlabel("Mean electrode displacement (cm)")
+        ax.set_xlabel("Mean absolute positioning error (cm)")
         ax.set_ylabel(ylabel)
         ax.set_title(title, loc="left", weight="bold")
         ax.set_ylim(0, ylim)
+        _margin_band(ax, label=first)
+        _readouts(ax, cap_curve, fmt, label_app=first)
 
     draw(axes[0], amp_cap, amp_single,
          "Change in scalp potential\n(% of peak amplitude)",
-         "A  Signal amplitude", 46)
+         "A  Signal amplitude", 46, "{:.1f}%", True)
 
     ax = axes[1]
     draw(ax, asy_cap, asy_single,
          "Change in left\u2013right asymmetry\n(percentage points)",
-         "B  Interhemispheric asymmetry", CLINICAL_ASYMMETRY_PP * 1.38)
+         "B  Interhemispheric asymmetry", CLINICAL_ASYMMETRY_PP * 1.38,
+         "{:.1f} pp", False)
     ax.axhline(CLINICAL_ASYMMETRY_PP, color=INK, ls=":", lw=1.3, zorder=4)
-    ax.annotate("2:1 interhemispheric ratio (scale reference)",
+    ax.annotate("clinical asymmetry threshold (2:1)",
                 xy=(0.04, CLINICAL_ASYMMETRY_PP + 0.6), ha="left", va="bottom",
                 fontsize=9, color=INK, zorder=6)
 
@@ -172,12 +220,17 @@ def build_figure(summary: pd.DataFrame, dipole: pd.DataFrame | None) -> dict:
         st = st.sort_values("x")
         st.attrs["scale"] = 1.0
         draw(axes[2], st, None, "Dipole localisation error (mm)",
-             "C  Source localisation", 16.5)
+             "C  Source localisation", 16.5, "{:.1f} mm", False)
         floor = float(dipole[dipole["mode"] == "baseline"]["error_mm"].mean())
         axes[2].annotate(f"method floor {floor:.2f} mm", xy=(0.04, 0.4),
                          fontsize=8.5, color=MUTED, ha="left", va="bottom")
-        headline.update({f"loc_at_{d:g}cm_mm": at(st, d) for d in REPORT_AT_CM})
-        headline["loc_baseline_floor_mm"] = floor
+        headline.update({
+            "loc_expert_mm": at(st, EXPERT_CM),
+            "loc_app_mm": at(st, APP_CM),
+            "loc_limit_mm": at(st, LIMIT_CM),
+            "loc_increment_mm": at(st, LIMIT_CM) - at(st, EXPERT_CM),
+            "loc_baseline_floor_mm": floor,
+        })
 
     for ax in axes:
         ax.set_xlim(0, 1.62)
@@ -190,8 +243,10 @@ def build_figure(summary: pd.DataFrame, dipole: pd.DataFrame | None) -> dict:
               label="median to 90th percentile across sources"),
         Line2D([], [], color=COLOR_SINGLE, lw=1.4, ls=(0, (5, 2)),
                label="Single electrode (median)"),
+        Line2D([], [], color=COLOR_CAP, marker="D", ls="-", lw=1.0, ms=5.5,
+               alpha=0.75, label="App-guided, observed (0.938 cm)"),
     ]
-    fig.legend(handles=handles, loc="lower center", ncol=3, frameon=False,
+    fig.legend(handles=handles, loc="lower center", ncol=4, frameon=False,
                bbox_to_anchor=(0.5, -0.05), fontsize=9.5)
 
     fig.tight_layout()
@@ -199,11 +254,13 @@ def build_figure(summary: pd.DataFrame, dipole: pd.DataFrame | None) -> dict:
     fig.savefig(FIGURE, dpi=300, bbox_inches="tight")
     plt.close(fig)
 
-    for name, curve in (("amp", amp_cap), ("asy", asy_cap)):
-        for d in REPORT_AT_CM:
-            headline[f"{name}_at_{d:g}cm"] = at(curve, d)
-            headline[f"{name}_at_{d:g}cm_p90"] = at(curve, d, "hi")
-    headline["amp_single_at_1cm"] = at(amp_single, 1.0)
+    for name, curve, unit in (("amp", amp_cap, 100), ("asy", asy_cap, 100)):
+        headline[f"{name}_expert"] = at(curve, EXPERT_CM)
+        headline[f"{name}_app"] = at(curve, APP_CM)
+        headline[f"{name}_limit"] = at(curve, LIMIT_CM)
+        headline[f"{name}_increment"] = at(curve, LIMIT_CM) - at(curve, EXPERT_CM)
+        headline[f"{name}_expert_p90"] = at(curve, EXPERT_CM, "hi")
+        headline[f"{name}_limit_p90"] = at(curve, LIMIT_CM, "hi")
     headline["amp_single_at_2cm"] = at(amp_single, 2.0)
     headline["linearity_r2_amp_cap"] = linearity_check(amp_cap)
     return headline

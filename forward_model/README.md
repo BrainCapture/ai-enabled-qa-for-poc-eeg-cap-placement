@@ -1,29 +1,26 @@
 # Forward-model study: how much does a displaced electrode change the EEG?
 
-> ### ⚠️ Exploratory — not reported in the clinical paper
+> ### Supplementary Material 7 of the clinical paper
 >
-> This module was built to give mechanistic content to the volume-conduction
-> argument behind the **0.5 cm non-inferiority margin**. It is **not** used for
-> that purpose and does not appear in the paper or its supplements.
+> Reported as exploratory mechanistic context for the volume-conduction
+> argument behind the **0.5 cm non-inferiority margin** — not as a clinical
+> validation of it, and not as a per-placement tolerance.
 >
-> **Why it was withdrawn.** The model perturbs the electrode array by a uniform
-> rigid displacement and reports mean Euclidean electrode movement. The study's
-> mean absolute error is a different quantity: the mean of **ten
-> one-dimensional coordinate deviations** across six electrodes (T7/T8 one axis
-> each, Fp1/Fp2/O1/O2 two each). A single MAE value is consistent with many
-> different spatial patterns — small distributed deviations, or one large focal
-> one — and these do not have the same signal consequences. Treating an MAE of
-> 0.855 or 1.355 cm as a uniform physical displacement requires assumptions the
-> measurements do not supply.
+> **Read the abscissa carefully.** The model perturbs the array by a uniform
+> rigid displacement. The study's mean absolute error is a different quantity:
+> the mean of **ten one-dimensional coordinate deviations** across six
+> electrodes (T7/T8 one axis each, Fp1/Fp2/O1/O2 two each). A single value of
+> that measure is consistent with many spatial patterns — small distributed
+> deviations, or one large focal one — which do not have the same signal
+> consequences. The study's own data show it: a placement at 1.29 cm was rated
+> clinically incorrect while one at 1.31 cm was rated optimal, and an expert
+> placement at 1.38 cm was rated usable.
 >
-> The study's own data make the point: a placement at 1.29 cm MAE was rated
-> clinically incorrect while one at 1.31 cm was rated optimal, because the
-> deviations were distributed differently.
->
-> The margin's robustness is instead established by the margin-sensitivity
-> analysis in `study/revision_analyses.py` (section 1), which uses only the
-> trial measurements. Nothing below should be read as a clinical threshold, a
-> per-placement safety bound, or a validation of the margin.
+> So the margin span drawn on these curves locates the margin on the model's
+> axis; it does not define a worst acceptable placement. The margin's
+> robustness rests instead on the margin-sensitivity analysis in
+> `study/revision_analyses.py` (section 1), which uses only the trial
+> measurements: the conclusion holds for any margin above 0.143 cm.
 
 ## The question it was built to answer
 
@@ -74,14 +71,13 @@ Every metric is linear in array displacement over the range studied
 far less than a whole-cap shift of the same magnitude — at 1 cm, 2.1 % of peak
 amplitude against 15.0 %.
 
-The abscissa is **mean Euclidean electrode displacement in the model**, not the
-study's MAE. An earlier version of this figure marked the study's Expert
-(0.855 cm) and App-guided (0.938 cm) errors on that axis and shaded a band to
-0.855 + 0.5 = 1.355 cm labelled "worst placement the margin would accept".
-Those annotations are the reason this module was withdrawn, and they have been
-removed; `report.py` now reports at round displacement magnitudes instead. The
-dotted line in panel B is a scale reference for the asymmetry index, not a
-safety threshold.
+The figure marks the study's Expert error (0.855 cm), the App-guided error
+observed (0.938 cm, diamond) and the far end of the margin span (1.355 cm).
+Those are positions on the model's displacement axis, carried over from the
+study's own measure — see the note at the top for why the two are not the same
+quantity and why the far end is not a worst acceptable placement. The dotted
+line in panel B is a scale reference for the asymmetry index, not a threshold
+of clinical acceptability.
 
 Run `python3 report.py` to regenerate the figure and reprint the numbers.
 

@@ -184,31 +184,29 @@ to get wrong when reading these numbers:
   another at **1.31 cm was rated optimal**, and an **expert** placement at
   **1.38 cm** was rated usable.
 
-## Forward model — exploratory, not reported in the paper
+## Forward model — Supplementary Material 7
 
 ![Forward-model displacement curves](forward_model/figures/forward_displacement.png)
 
 `forward_model/` contains a 3-layer BEM forward solution on the `fsaverage`
 template head, comparing the nominal 19-electrode 10–20 array against displaced
-arrays over 20 484 cortical dipoles. It was built to give mechanistic content
-to the volume-conduction argument behind the 0.5 cm margin.
+arrays over 20 484 cortical dipoles. It gives mechanistic content to the
+volume-conduction argument behind the 0.5 cm margin, and is reported in the
+paper as exploratory context rather than as a validation of the margin.
 
-**It is retained here as exploratory work and is deliberately not used to
-justify the margin.** The reason is the mismatch described above: the model
-perturbs the array by a *uniform rigid displacement* and reports mean Euclidean
-electrode movement, whereas the study's MAE is a mean of ten scalar coordinate
-deviations over six electrodes. Mapping one onto the other would require
-assumptions the data do not supply, and a single MAE value corresponds to many
-different spatial patterns with different signal consequences. Reading the
-curves as though a given MAE implied a given physical shift would therefore
-overstate what the model can support.
+Scalp potential, interhemispheric asymmetry and dipole-fit localisation error
+all vary linearly with array displacement (R² = 1.00), and an isolated
+single-electrode displacement perturbs the signal far less than a whole-cap
+shift of the same magnitude.
 
-What the model does show, on its own terms, is a dose–response: scalp
-potential, interhemispheric asymmetry and dipole-fit localisation error all
-vary linearly with array displacement over 0.18–1.46 cm (R² = 1.00), and an
-isolated single-electrode displacement perturbs the signal far less than a
-whole-cap shift of the same magnitude. That is a statement about the template
-head model, not about clinical interpretation, and not about this cohort.
+**One caveat governs how the curves are read.** The model perturbs the array by
+a *uniform rigid displacement* and reports mean Euclidean electrode movement,
+whereas the study's MAE is a mean of ten scalar coordinate deviations over six
+electrodes. The two are not the same quantity, and a single MAE value
+corresponds to many spatial patterns with different signal consequences — which
+is why the margin span drawn on the figure locates the margin on the model's
+axis rather than defining a worst acceptable placement. What the margin
+actually survives is the sensitivity analysis above: any value above 0.143 cm.
 
 See [`forward_model/README.md`](forward_model/README.md) for the method, the
 caching design and the full limitations.

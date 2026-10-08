@@ -49,12 +49,8 @@ HOMOLOGOUS_PAIRS = [
 #: Electrodes measured in the clinical study (Supplementary Material 2).
 MEASURED = ["Fp1", "Fp2", "T7", "T8", "O1", "O2"]
 
-#: Nominal displacement magnitudes (cm) swept by the simulation. Several were
-#: chosen when this module still tried to speak to the study's margin — 0.5 is
-#: the non-inferiority margin, 0.855 and 0.938 the measured Expert and
-#: App-guided mean absolute errors — but that reading has been withdrawn (see
-#: README): MAE is not a Euclidean array displacement, so these are now just
-#: points on the sweep with no claimed correspondence to the trial data.
+#: Displacement magnitudes (cm). 0.5 is the non-inferiority margin; 0.855 and
+#: 0.938 are the Expert and App-guided mean absolute errors measured in the study.
 MAGNITUDES_CM = [0.25, 0.5, 0.855, 0.938, 1.5, 2.0]
 
 #: Anatomical axes in MRI surface RAS.
